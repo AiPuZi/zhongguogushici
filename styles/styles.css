@@ -1,0 +1,229 @@
+/* 应用全局基础样式 */
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* 页头样式调整 */
+header {
+    background-color: #808080; /* 灰色背景#808080*/
+    color: #fff; /* 深色文本，以确保足够的对比度 */
+    padding: 3px 8px;
+    display: flex; /* 使用flex布局 */
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    position: relative; /* 保持相对定位 */
+}
+
+.logo {
+    font-size: 1em;
+    font-weight: bold;
+    position: absolute; /* 保持绝对定位 */
+    left: 20px; /* 距离左边界的距离 */
+    top: 50%;
+    transform: translateY(-50%); /* 垂直居中 LOGO */
+}
+
+.slogan {
+    font-size: 0.93em;
+    /* 移除了display: inline-block; 因为flex布局会管理对齐 */
+    padding: 10px 0;
+    /* 移除了width: 100%; 因为不再需要强制宽度 */
+    /* 移除了margin-left; 因为flex布局会管理对齐 */
+}
+
+
+/* 主内容区域样式 */
+main {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* 古诗容器样式 */
+.poems-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* 单行古诗样式 */
+.poem-row {
+    display: flex;
+    justify-content: flex-start; /* 从容器的开始处排列子元素，即诗词内容从左至右排列 */
+    margin-bottom: 20px;
+}
+
+/* 单个古诗样式 */
+.poem {
+    flex-basis: calc(33.333% - 10px);
+    text-align: center;
+    margin-right: 15px;
+    box-sizing: border-box;
+    background-color: #f9f9f9; /* 设置背景颜色 */
+    padding: 10px; /* 根据需要调整内边距 */
+    border: 1px solid #ddd; /* 设置边框颜色 */
+    border: none;
+}
+
+.poem h3 {
+    font-size: 15.2px; /* 修改标题的字体大小 */
+}
+
+.poem p {
+    font-size: 13.9px; /* 修改作者名的字体大小 */
+}
+
+.poem div {
+    font-size: 13.8px; /* 修改诗句的字体大小 */
+}
+
+/* 最后一个古诗不需要右边距 */
+.poem-row .poem:last-child {
+    margin-right: 0;
+}
+
+/* 适应屏幕大小 */
+@media screen and (max-width: 767px) {
+    .poem {
+        flex-basis: 100%;
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+
+    .poem-row {
+        flex-direction: column;
+    }
+}
+
+/* 页脚样式 */
+footer {
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+footer a, footer span {
+    color: #505050;
+    text-decoration: none;
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 0 5px;
+}
+
+footer span:first-child {
+    display: block;
+}
+
+/* 导航栏样式 */
+.poetry-navigation {
+    text-align: center; /* 导航文字居中 */
+    margin: 20px 0; /* 在导航栏上下添加间隔 */
+    font-size: 1em; /* 设置字体大小 */
+    width: 100%;
+}
+
+.poetry-navigation a {
+    margin: 0 10px; /* 设置导航链接之间的间隔 */
+    color: #333; /* 设置字体颜色 */
+    text-decoration: none; /* 移除下划线 */
+    font-size: 0.93em; /* 设置更小的字体大小 */
+}
+
+.poetry-navigation a:hover {
+    text-decoration: underline; /* 鼠标悬停时添加下划线 */
+}
+
+/* 上一页下一页样式代码 */
+.pagination-buttons {
+    text-align: center;
+    margin-top: 20px; /* 根据需要调整间距 */
+}
+
+.pagination-buttons button {
+    margin: 0 20px; /* 设置按钮之间的水平间距 */
+}
+
+/* 搜索框样式代码 */
+.search-container {
+       position: absolute;
+       right: 20px; /* 在这里设置右侧的空隙 */
+       top: 50%;
+       transform: translateY(-50%);
+   }
+
+.search-container input[type="text"] {
+    padding: 5px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.search-container button {
+    padding: 5px 10px;
+    background-color: #FFFFFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #808080;
+}
+
+/* 鼠标悬停状态的颜色 */
+.search-container button:hover {
+    background-color: #FFFFFF;
+}
+
+.search-box {
+  /* position: absolute; */
+  /* float: right; */
+}
+
+/* 设置基于WINGLOK样式 */
+.attribution {
+    text-align: center; /* 文字居中 */
+    margin-top: 20px; /* 在分页按钮和文字之间添加一些间距 */
+    font-size: 0.8em; /* 设置较小的字体大小 */
+    font-family: "Microsoft YaHei", sans-serif; /* 设置微软雅黑字体 */
+    font-weight: bold; /* 字体加粗 */
+    color: #505050; /* 设置字体颜色为中灰色 */
+}
+
+.attribution a {
+    text-decoration: none; /* 移除下划线 */
+    color: #505050; /* 设置链接字体颜色为中灰色 */
+}
+
+.attribution a:hover {
+    text-decoration: none; /* 鼠标悬停时也不显示下划线 */
+    color: #505050; /* 鼠标悬停时链接字体颜色保持中灰色 */
+}
+
+/* 设置搜索框输入文字时边框线不会变黑 */
+.search-container input[type="text"]:focus {
+    border: 1px solid #ccc; /* 保持聚焦时边框颜色不变 */
+    outline: none; /* 移除聚焦时浏览器可能添加的默认轮廓线 */
+}
+
+/* 设置留言板链接的格式 */
+.attribution {
+    font-family: Arial, sans-serif; /* 设置字体 */
+    font-size: 14px; /* 设置字体大小 */
+    color: #505050; /* 设置文字颜色 */
+    margin-bottom: 0px; /* 在元素下方添加一些外边距 */
+}
+
+.attribution a {
+    color: inherit; /* 继承父元素的颜色 */
+    text-decoration: none; /* 移除下划线 */
+    cursor: pointer; /* 鼠标悬停时变成手掌形状 */
+    display: block; /* 将链接显示为块级元素 */
+    margin-top: 10px; /* 设置顶部外边距 */
+}
+
+.attribution a:hover {
+    text-decoration: underline; /* 鼠标悬停时添加下划线 */
+}
+
+/* 媒体查询，针对手机屏幕尺寸进行样式调整 */
