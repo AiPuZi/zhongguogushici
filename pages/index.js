@@ -94,11 +94,7 @@ export default function Home() {
       
       <main id="poetry-content">
   {poetryData.map((poem, index) => (
-    <div key={index}>
-      {poem.title && <h3>{poem.title}</h3>}
-      {poem.author && <p>{poem.author}</p>}
-      <div>{poem.paragraphs.join('<br>')}</div>
-    </div>
+    <Poem key={index} title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
   ))}
 </main>
 
