@@ -6,15 +6,23 @@ import Poem from '../components/poem';
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => ({
-    title: item.title,
-    chapter: item.chapter,
-    section: item.section,
-    content: Array.isArray(item.content) ? item.content : [],
-    comment: Array.isArray(item.comment) ? item.comment : []
-  }));
-}
+  return (Array.isArray(data) ? data : []).map(item => {
+    // 统一内容字段的格式
+    let content = [];
+    if (Array.isArray(item.paragraphs)) {
+      content = item.paragraphs;
+    } else if (typeof item.paragraphs === 'string') {
+      content = item.paragraphs.split('\n'); // 假设字符串以换行符分隔
+    } // ... 其他格式的处理
 
+    return {
+      title: item.title,
+      author: item.author, 
+      content: content,
+      comment: Array.isArray(item.comment) ? item.comment : []
+    };
+  });
+}
 // 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
@@ -123,7 +131,7 @@ export default function Home({ initialPoetryData }) {
       <Poem
         title={poem.title}
         author={poem.author}
-        content={poem.paragraphs} // 注意这里传递的是 paragraphs
+        content={poem.content} // 确保这里是字符串数组
       />
     </div>
   ))}
