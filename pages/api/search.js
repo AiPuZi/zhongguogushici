@@ -6,11 +6,12 @@ export default function handler(req, res) {
 
   if (category) {
     const poemsPerPage = parseInt(perPage, 10) || 10;
-    // 确保 page 参数从 1 开始
     const currentPage = Math.max(1, parseInt(page, 10));
     const startIndex = (currentPage - 1) * poemsPerPage;
-    const categoryDirPath = path.join(__dirname, '../../../../public', category);
 
+    // 使用process.cwd()来获取当前工作目录，这通常指向项目根目录
+    const categoryDirPath = path.join(process.cwd(), 'public', category);
+    
     fs.readdir(categoryDirPath, (err, files) => {
       if (err) {
         console.error(`Error reading directory ${categoryDirPath}:`, err);
