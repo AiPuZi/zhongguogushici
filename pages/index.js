@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import Poem from '../../components/poem';
+import Poem from '../components/poem';
 
 export default function Home() {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
