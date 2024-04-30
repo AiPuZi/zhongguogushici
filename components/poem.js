@@ -1,16 +1,14 @@
 export default function Poem({ title, author, paragraphs }) {
+  // 将段落数组转换成一个字符串，段落之间用 <br> 分隔
+  // 如果段落内部已经包含 <br>，这将保留所有的换行
+  const combinedParagraphs = paragraphs.join('<br><br>');
+
   return (
     <div>
       {title && <h3>{title}</h3>}
       {author && <p>{author}</p>}
-      {paragraphs.map((paragraph, index) => (
-        // 使用 split 方法将每个段落的字符串按 <br> 分割，然后遍历数组渲染每一行
-        <div key={index}>
-          {paragraph.split('<br>').map((line, lineIndex) => (
-            <p key={lineIndex}>{line}</p>
-          ))}
-        </div>
-      ))}
+      {/* 使用 dangerouslySetInnerHTML 渲染包含 <br> 的段落字符串 */}
+      <div dangerouslySetInnerHTML={{ __html: combinedParagraphs }} />
     </div>
   );
 }
