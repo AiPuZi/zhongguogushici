@@ -11,7 +11,9 @@ async function getPoetryData(category, page, perPage) {
 
 // 在这里使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
-  const poetryData = await getPoetryData('quantangshi', 0, 9);
+  // 使用环境变量中定义的API基础URL
+  const baseUrl = process.env.API_BASE_URL;
+  const poetryData = await getPoetryData(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   return {
     props: {
       initialPoetryData: poetryData,
