@@ -92,11 +92,16 @@ export default function Home() {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-      <main id="poetry-content">
-  {poetryData.map((poem, index) => (
-    <Poem key={index} title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
-  ))}
-</main>
+     <main id="poetry-content">
+        {/* 将诗歌数据分组，每组三首 */}
+        {Array.from({ length: Math.ceil(poetryData.length / 3) }).map((_, rowIndex) => (
+          <div key={rowIndex} className="poem-row">
+            {poetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
+              <Poem key={poemIndex} title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
+            ))}
+          </div>
+        ))}
+      </main>
 
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
