@@ -1,8 +1,7 @@
-export default function Poem({ title, author, paragraphs }) {
-  // 如果 paragraphs 不是数组，使用空数组作为默认值
-  const safeParagraphs = Array.isArray(paragraphs) ? paragraphs : [];
+  const hasContent = safeParagraphs.some(paragraph => paragraph.trim() !== '');
+
   // 将段落数组转换成一个字符串，段落之间用 <br><br> 分隔
-  const combinedParagraphs = safeParagraphs.join('<br><br>');
+  const combinedParagraphs = hasContent ? safeParagraphs.join('<br><br>') : '内容不可用';
 
   return (
     <div>
