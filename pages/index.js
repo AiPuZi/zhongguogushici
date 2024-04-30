@@ -3,20 +3,23 @@ import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
 // 用于获取诗词数据的函数
+// 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
-    // 如果内容是字符串，将其分割成数组
-    let content = item.paragraphs;
-    if (typeof content === 'string') {
-      content = content.split('\n'); // 假设内容以换行符分割
-    }
+    // 统一内容字段的格式
+    let content = [];
+    if (Array.isArray(item.paragraphs)) {
+      content = item.paragraphs;
+    } else if (typeof item.paragraphs === 'string') {
+      content = item.paragraphs.split('\n'); // 假设字符串以换行符分隔
+    } // ... 其他格式的处理
 
     return {
       title: item.title,
       author: item.author || "未知作者", // 提供默认作者
-      content: Array.isArray(content) ? content : [content], // 确保内容总是数组
+      content: content,
       comment: Array.isArray(item.comment) ? item.comment : []
     };
   });
@@ -125,14 +128,14 @@ export default function Home({ initialPoetryData }) {
     <main id="poetry-content">
   {/* 直接使用 poetryData 来渲染诗词 */}
   {poetryData.map((poem, index) => (
-  <div key={index} className="poem">
-    <Poem
-      title={poem.title}
-      author={poem.author}
-      content={poem.paragraphs} // 确保这里传递的是 paragraphs
-    />
-  </div>
-))}
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content} // 确保这里是字符串数组
+      />
+    </div>
+  ))}
 </main>
 
       {/* 分页按钮 */}
