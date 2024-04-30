@@ -1,16 +1,13 @@
-// Poem.js
-export default function Poem({ title, author, content }) {
-  // 确保 content 是数组
-  const safeContent = Array.isArray(content) ? content : [];
-
+export default function Poem({ title, author, section, chapter, content }) {
   // 将内容数组转换成字符串，每段之间用 <br><br> 分隔
-  const combinedContent = safeContent.join('<br><br>');
+  const combinedContent = Array.isArray(content) ? content.join('<br><br>') : '';
 
   return (
     <div>
-      {title && <h3>{title}</h3>}
-      {author && <h4>{author}</h4>}
-      {/* 使用 dangerouslySetInnerHTML 来渲染内容 */}
+      <h3>{title}</h3>
+      <h4>{author}</h4>
+      <h5>{section}</h5>
+      <h5>{chapter}</h5>
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
     </div>
   );
