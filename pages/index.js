@@ -31,16 +31,21 @@ export default function Home({ initialPoetryData }) {
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   // 当currentCategory或currentPage改变时，加载对应分类的诗词
-  useEffect(() => {
-    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-      const loadPoetryData = async () => {
-        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-        setPoetryData(data);
-      };
+useEffect(() => {
+  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+    const loadPoetryData = async () => {
+      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+      // 确保每个诗词的 content 字段都是数组
+      const safeData = data.map(poem => ({
+        ...poem,
+        paragraphs: Array.isArray(poem.content) ? poem.content : []
+      }));
+      setPoetryData(safeData);
+    };
 
-      loadPoetryData();
-    }
-  }, [currentCategory, currentPage]);
+    loadPoetryData();
+  }
+}, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
