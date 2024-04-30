@@ -49,9 +49,6 @@ export default function Home() {
   const goToPrevPage = () => {
     setCurrentPage((prevPage) => (prevPage > 0 ? prevPage - 1 : 0));
   };
-
-// 截取前9首诗词
-  const displayedPoetryData = poetryData.slice(0, 9);
   
   return (
     <>
