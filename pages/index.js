@@ -116,17 +116,23 @@ export default function Home({ initialPoetryData }) {
       </nav>
       
     <main id="poetry-content">
-        {/* 直接使用 poetryData 来渲染诗词 */}
-        {Array.from({ length: Math.ceil(poetryData.length / 3) }).map((_, rowIndex) => (
-          <div key={rowIndex} className="poem-row">
-            {poetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
-              <div key={poemIndex} className="poem">
-                <Poem title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
-              </div>
-            ))}
-          </div>
-        ))}
-      </main>
+  {/* 直接使用 poetryData 来渲染诗词 */}
+  {Array.from({ length: Math.ceil(poetryData.length / 3) }).map((_, rowIndex) => (
+    <div key={rowIndex} className="poem-row">
+      {poetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
+        <div key={poemIndex} className="poem">
+          <Poem
+            title={poem.title}
+            chapter={poem.chapter}
+            section={poem.section}
+            content={poem.content}
+            comment={poem.comment}
+          />
+        </div>
+      ))}
+    </div>
+  ))}
+</main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
