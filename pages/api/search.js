@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import Poem from '../components/poem';
 
 export default function handler(req, res) {
   const { query, category, page, perPage } = req.query;
