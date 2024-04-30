@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
-// 用于获取诗词数据的函数，这里是一个示例，你需要根据实际情况编写
+// 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
@@ -11,19 +11,22 @@ async function getPoetryData(category, page, perPage) {
     chapter: item.chapter,
     section: item.section,
     content: Array.isArray(item.content) ? item.content : [],
-    comment: Array.isArray(item.comment) ? item.comment : null
+    comment: Array.isArray(item.comment) ? item.comment : []
   }));
 }
 
-// 在这里使用 getStaticProps 来预渲染页面
+// 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
-  // 使用环境变量中定义的API基础URL
-  const baseUrl = process.env.API_BASE_URL;
+  const baseUrl = process.env.API_BASE_URL; // 使用环境变量中定义的API基础URL
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const poetryData = await response.json();
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: poetryData.map(poem => ({
+        ...poem,
+        content: Array.isArray(poem.content) ? poem.content : [],
+        comment: Array.isArray(poem.comment) ? poem.comment : []
+      })),
     },
     revalidate: 10, // ISR: 页面内容更新后，每10秒重新生成一次
   };
@@ -36,47 +39,40 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  // 当currentCategory或currentPage改变时，加载对应分类的诗词
-useEffect(() => {
-  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      // 确保每个诗词的 content 字段都是数组
-      const safeData = data.map(poem => ({
-        ...poem,
-        paragraphs: Array.isArray(poem.content) ? poem.content : []
-      }));
-      setPoetryData(safeData);
-    };
+  useEffect(() => {
+    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+      const loadPoetryData = async () => {
+        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+        setPoetryData(data);
+      };
 
-    loadPoetryData();
-  }
-}, [currentCategory, currentPage]);
+      loadPoetryData();
+    }
+  }, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
-    event.preventDefault(); // 阻止<a>标签的默认行为
-    setCurrentCategory(category); // 更新状态以改变当前选中的分类
-    setCurrentPage(0); // 重置到第一页
-    window.location.hash = category; // 更新 URL 的 hash 部分以反映当前分类
+    event.preventDefault();
+    setCurrentCategory(category);
+    setCurrentPage(0);
+    window.location.hash = category;
   };
 
   // 处理搜索功能
   const handleSearch = async (event) => {
-  event.preventDefault();
-  // 使用路由导航到搜索页面，并传递查询参数
-  window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
-};
+    event.preventDefault();
+    window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
+  };
 
   // 处理分页功能
   const goToNextPage = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
+    setCurrentPage(prevPage => prevPage + 1);
   };
 
   const goToPrevPage = () => {
-    setCurrentPage((prevPage) => (prevPage > 0 ? prevPage - 1 : 0));
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
-  
+
   return (
     <>
       <Head>
