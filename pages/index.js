@@ -13,7 +13,8 @@ async function getPoetryData(category, page, perPage) {
 export async function getStaticProps() {
   // 使用环境变量中定义的API基础URL
   const baseUrl = process.env.API_BASE_URL;
-  const poetryData = await getPoetryData(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const poetryData = await response.json();
   return {
     props: {
       initialPoetryData: poetryData,
