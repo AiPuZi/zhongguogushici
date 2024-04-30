@@ -137,13 +137,14 @@ export default function Home({ initialPoetryData }) {
       </nav>
       
     <main id="poetry-content">
-  {/* 直接使用 poetryData 来渲染诗词 */}
   {poetryData.map((poem, index) => (
     <div key={index} className="poem">
       <Poem
         title={poem.title}
         author={poem.author}
-        content={poem.content} // 确保这里是字符串数组
+        section={poem.section}
+        chapter={poem.chapter}
+        content={poem.content}
       />
     </div>
   ))}
