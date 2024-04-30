@@ -12,13 +12,13 @@ export default function Home() {
   // 当currentCategory或currentPage改变时，加载对应分类的诗词
   useEffect(() => {
     const loadPoetryData = async () => {
+      // 注意这里的API请求路径可能需要根据你的实际后端路由进行调整
       const response = await fetch(`/api/search?category=${currentCategory}&page=${currentPage}&perPage=${poemsPerPage}`);
       const data = await response.json();
       if (Array.isArray(data)) {
         setPoetryData(data);
       } else {
         console.error('Expected an array from the API', data);
-        // 处理错误或非数组数据的情况
         setPoetryData([]);
       }
     };
@@ -95,11 +95,11 @@ export default function Home() {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-     <main id="poetry-content">
-        {/* 将诗歌数据分组，每组三首 */}
-        {Array.from({ length: Math.ceil(displayedPoetryData.length / 3) }).map((_, rowIndex) => (
+    <main id="poetry-content">
+        {/* 直接使用 poetryData 来渲染诗词 */}
+        {Array.from({ length: Math.ceil(poetryData.length / 3) }).map((_, rowIndex) => (
           <div key={rowIndex} className="poem-row">
-            {displayedPoetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
+            {poetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
               <div key={poemIndex} className="poem">
                 <Poem title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
               </div>
@@ -108,9 +108,10 @@ export default function Home() {
         ))}
       </main>
 
+      {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
