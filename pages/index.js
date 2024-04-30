@@ -8,19 +8,30 @@ async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
-    // 统一内容字段的格式
-    let content = [];
-    if (Array.isArray(item.paragraphs)) {
-      content = item.paragraphs;
-    } else if (typeof item.paragraphs === 'string') {
-      content = item.paragraphs.split('\n'); // 假设字符串以换行符分隔
-    } // ... 其他格式的处理
+    // 统一处理内容字段，确保它总是数组
+    let content = item.paragraphs || item.content || [];
+    if (typeof content === 'string') {
+      content = content.split('\n'); // 假设内容以换行符分割
+    } else if (!Array.isArray(content)) {
+      content = []; // 如果内容既不是字符串也不是数组，使用空数组
+    }
+
+    // 提取作者，如果不存在则提供默认值
+    const author = item.author;
+
+    // 提取标题，如果不存在则提供默认值
+    const title = item.title || item.rhythmic;
+
+    // 提取节和章信息，如果不存在则为空字符串
+    const section = item.section || '';
+    const chapter = item.chapter || '';
 
     return {
-      title: item.title,
-      author: item.author || "未知作者", // 提供默认作者
-      content: content,
-      comment: Array.isArray(item.comment) ? item.comment : []
+      title,
+      author,
+      section,
+      chapter,
+      content,
     };
   });
 }
