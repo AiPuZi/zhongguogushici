@@ -9,7 +9,8 @@ export default function Poem({ title, author, content }) {
   return (
     <div>
       {title && <h3>{title}</h3>}
-      {author && <h4>{author}</h4>} {/* 渲染作者 */}
+      {author && <h4>{author}</h4>}
+      {/* 使用 dangerouslySetInnerHTML 来渲染内容 */}
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
     </div>
   );
