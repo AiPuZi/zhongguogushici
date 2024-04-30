@@ -1,5 +1,7 @@
+// Poem.js
 export default function Poem({ title, author, content }) {
-  const combinedContent = content.join('<br><br>');
+  // 将内容数组转换成字符串，每段之间用 <br><br> 分隔
+  const combinedContent = Array.isArray(content) ? content.join('<br><br>') : '';
 
   return (
     <div>
