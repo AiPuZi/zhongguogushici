@@ -6,7 +6,7 @@ export async function getStaticProps() {
     props: {
       initialPoetryData: poetryData.map(poem => ({
         ...poem,
-        author: poem.author || "未知作者", // 如果作者信息不存在，提供默认值
+        author: poem.author,
         content: Array.isArray(poem.content) ? poem.content : [],
         comment: Array.isArray(poem.comment) ? poem.comment : []
       })),
