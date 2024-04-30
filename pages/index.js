@@ -35,12 +35,10 @@ export default function Home() {
 
   // 处理搜索功能
   const handleSearch = async (event) => {
-    event.preventDefault();
-    const response = await fetch(`/api/search?query=${searchInput}`);
-    const data = await response.json();
-    setPoetryData(data);
-    setCurrentPage(0); // 重置到第一页
-  };
+  event.preventDefault();
+  // 使用路由导航到搜索页面，并传递查询参数
+  window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
+};
 
   // 处理分页功能
   const goToNextPage = () => {
