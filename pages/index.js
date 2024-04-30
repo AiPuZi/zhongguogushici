@@ -2,28 +2,41 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
-export default function Home() {
+// 用于获取诗词数据的函数，这里是一个示例，你需要根据实际情况编写
+async function getPoetryData(category, page, perPage) {
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+}
+
+// 在这里使用 getStaticProps 来预渲染页面
+export async function getStaticProps() {
+  const poetryData = await getPoetryData('quantangshi', 0, 9);
+  return {
+    props: {
+      initialPoetryData: poetryData,
+    },
+    revalidate: 10, // ISR: 页面内容更新后，每10秒重新生成一次
+  };
+}
+
+export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState([]);
+  const [poetryData, setPoetryData] = useState(initialPoetryData);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   // 当currentCategory或currentPage改变时，加载对应分类的诗词
   useEffect(() => {
-    const loadPoetryData = async () => {
-      // 注意这里的API请求路径可能需要根据你的实际后端路由进行调整
-      const response = await fetch(`/api/search?category=${currentCategory}&page=${currentPage}&perPage=${poemsPerPage}`);
-      const data = await response.json();
-      if (Array.isArray(data)) {
+    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+      const loadPoetryData = async () => {
+        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
         setPoetryData(data);
-      } else {
-        console.error('Expected an array from the API', data);
-        setPoetryData([]);
-      }
-    };
+      };
 
-    loadPoetryData();
+      loadPoetryData();
+    }
   }, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
