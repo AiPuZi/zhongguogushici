@@ -6,7 +6,13 @@ import Poem from '../components/poem';
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return Array.isArray(data) ? data : [];
+  return (Array.isArray(data) ? data : []).map(item => ({
+    title: item.title || '无标题',
+    chapter: item.chapter,
+    section: item.section,
+    content: Array.isArray(item.content) ? item.content : ['内容不可用'],
+    comment: Array.isArray(item.comment) ? item.comment : null
+  }));
 }
 
 // 在这里使用 getStaticProps 来预渲染页面
