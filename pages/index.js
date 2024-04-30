@@ -7,10 +7,10 @@ async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => ({
-    title: item.title || '无标题',
+    title: item.title,
     chapter: item.chapter,
     section: item.section,
-    content: Array.isArray(item.content) ? item.content : ['内容不可用'],
+    content: Array.isArray(item.content) ? item.content : [],
     comment: Array.isArray(item.comment) ? item.comment : null
   }));
 }
