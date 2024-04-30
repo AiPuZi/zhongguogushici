@@ -50,6 +50,9 @@ export default function Home() {
     setCurrentPage((prevPage) => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
+// 截取前9首诗词
+  const displayedPoetryData = poetryData.slice(0, 9);
+  
   return (
     <>
       <Head>
@@ -94,10 +97,12 @@ export default function Home() {
       
      <main id="poetry-content">
         {/* 将诗歌数据分组，每组三首 */}
-        {Array.from({ length: Math.ceil(poetryData.length / 3) }).map((_, rowIndex) => (
+        {Array.from({ length: Math.ceil(displayedPoetryData.length / 3) }).map((_, rowIndex) => (
           <div key={rowIndex} className="poem-row">
-            {poetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
-              <Poem key={poemIndex} title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
+            {displayedPoetryData.slice(rowIndex * 3, rowIndex * 3 + 3).map((poem, poemIndex) => (
+              <div key={poemIndex} className="poem">
+                <Poem title={poem.title} author={poem.author} paragraphs={poem.paragraphs} />
+              </div>
             ))}
           </div>
         ))}
