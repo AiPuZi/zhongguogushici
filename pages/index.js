@@ -40,68 +40,42 @@ async function getPoetryData(category, page, perPage) {
 
 // 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
-  try {
-    const baseUrl = process.env.API_BASE_URL;
-    const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-    const poetryData = await response.json();
-    const processedData = preprocessPoetryData(poetryData);
-    return {
-      props: {
-        initialPoetryData: processedData,
-      },
-      revalidate: 10,
-    };
-  } catch (error) {
-    console.error('Error in getStaticProps:', error);
-    return {
-      props: {
-        initialPoetryData: [],
-      },
-    };
-  }
+  const baseUrl = process.env.API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const poetryData = await response.json();
+  const processedData = preprocessPoetryData(poetryData); // 使用 preprocessPoetryData 函数处理数据
+  return {
+    props: {
+      initialPoetryData: processedData,
+    },
+    revalidate: 10,
+  };
 }
 
 export default function Home({ initialPoetryData }) {
-  const [currentCategory, setCurrentCategory] = useState('quantangshi'); // 当前分类
-  const [poems, setPoems] = useState(initialPoetryData); // 诗词数据
-  const [searchInput, setSearchInput] = useState(''); // 搜索输入
-  const [currentPage, setCurrentPage] = useState(1); // 当前页码
-  const [totalPages, setTotalPages] = useState(0); // 总页数
+  const [currentCategory, setCurrentCategory] = useState('quantangshi');
+  const [poetryData, setPoetryData] = useState(initialPoetryData);
+  const [searchInput, setSearchInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-useEffect(() => {
-  if (currentPage !== 1 || currentCategory !== 'quantangshi') {
+  useEffect(() => {
+  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoems(data); // 使用 setPoems 而不是 setPoetryData
+      const processedData = preprocessPoetryData(data);
+      setPoetryData(processedData);
     };
 
     loadPoetryData();
   }
-}, [currentCategory, currentPage, poemsPerPage]);
-  
-  // 处理分页按钮点击事件
- const handlePageChange = (newPage) => {
-    fetch(`/api/poems?page=${newPage}&perPage=${poemsPerPage}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setPoems(data.poems);
-        setCurrentPage(newPage);
-        setTotalPages(data.totalPages);
-      })
-      .catch((error) => {
-        console.error('Error fetching poems:', error);
-      });
-  };
+}, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(1); 
+    setCurrentPage(0);
     window.location.hash = category;
   };
 
@@ -163,30 +137,26 @@ useEffect(() => {
       </nav>
       
     <main id="poetry-content">
- {poems.map((poem, index) => (
-  <div key={index} className="poem">
-    <Poem
-      title={poem.title}
-      author={poem.author}
-      section={poem.section}
-      chapter={poem.chapter}
-      content={poem.content}
-      comments={poem.comments}
+  {poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        section={poem.section}
+        chapter={poem.chapter}
+        content={poem.content}
+        comments={poem.comments}
       />
     </div>
   ))}
 </main>
 
-       {/* 分页按钮 */}
-     <div className="pagination-buttons">
-        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}>
-          上一页
-        </button>
-        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages}>
-          下一页
-        </button>
+      {/* 分页按钮 */}
+      <div className="pagination-buttons">
+        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
-            
+
       <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
