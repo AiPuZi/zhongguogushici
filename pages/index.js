@@ -151,15 +151,15 @@ useEffect(() => {
       </nav>
       
     <main id="poetry-content">
-  {poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        section={poem.section}
-        chapter={poem.chapter}
-        content={poem.content}
-        comments={poem.comments}
+ {poems.map((poem, index) => (
+  <div key={index} className="poem">
+    <Poem
+      title={poem.title}
+      author={poem.author}
+      section={poem.section}
+      chapter={poem.chapter}
+      content={poem.content}
+      comments={poem.comments}
       />
     </div>
   ))}
