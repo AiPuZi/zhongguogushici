@@ -53,23 +53,22 @@ export async function getStaticProps() {
 }
 
 export default function Home({ initialPoetryData }) {
-  const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData);
-  const [searchInput, setSearchInput] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [poems, setPoems] = useState(initialPoetryData); // 使用 initialState 初始化诗词数据
+  const [currentPage, setCurrentPage] = useState(1); // 当前页码
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  useEffect(() => {
-  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      const processedData = preprocessPoetryData(data);
-      setPoetryData(processedData);
-    };
-
-    loadPoetryData();
-  }
-}, [currentCategory, currentPage]);
+  // 处理分页按钮点击事件
+  const handlePageChange = (newPage) => {
+    fetch(`/api/poems?page=${newPage}&perPage=${poemsPerPage}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setPoems(data.poems); // 更新诗词数据
+        setCurrentPage(newPage); // 更新当前页码
+      })
+      .catch((error) => {
+        console.error('Error fetching poems:', error);
+      });
+  };
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
@@ -151,12 +150,16 @@ export default function Home({ initialPoetryData }) {
   ))}
 </main>
 
-      {/* 分页按钮 */}
+       {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}>
+          上一页
+        </button>
+        <button onClick={() => handlePageChange(currentPage + 1)}>
+          下一页
+        </button>
       </div>
-
+            
       <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
