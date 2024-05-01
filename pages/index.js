@@ -19,12 +19,14 @@ function preprocessPoetryData(data) {
     // 提取标题，如果不存在则提供默认值
     const title = item.title || item.rhythmic;
     const chapter = item.chapter || '';
+    const comments = item.comment || []; // 如果 comment 字段不存在，使用空数组
 
     return {
       title,
       author,
       content, // 使用处理后的content数组
       chapter,
+      comments,
     };
   });
 }
@@ -143,6 +145,7 @@ export default function Home({ initialPoetryData }) {
         section={poem.section}
         chapter={poem.chapter}
         content={poem.content}
+        comments={poem.comments}
       />
     </div>
   ))}
