@@ -40,16 +40,28 @@ async function getPoetryData(category, page, perPage) {
 
 // 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-  const poetryData = await response.json();
-  const processedData = preprocessPoetryData(poetryData); // 使用 preprocessPoetryData 函数处理数据
-  return {
-    props: {
-      initialPoetryData: processedData,
-    },
-    revalidate: 10,
-  };
+  try {
+    const baseUrl = process.env.API_BASE_URL;
+    const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    const poetryData = await response.json();
+    const processedData = preprocessPoetryData(poetryData);
+    return {
+      props: {
+        initialPoetryData: processedData,
+      },
+      revalidate: 10,
+    };
+  } catch (error) {
+    console.error('Error in getStaticProps:', error);
+    return {
+      props: {
+        initialPoetryData: [],
+      },
+    };
+  }
 }
 
 export default function Home({ initialPoetryData }) {
