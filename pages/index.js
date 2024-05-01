@@ -127,7 +127,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
         <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
         <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主</a>
+        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
         <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
         <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
         <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
