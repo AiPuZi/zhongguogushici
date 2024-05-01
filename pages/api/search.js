@@ -1,13 +1,15 @@
+// pages/api/search.js
 import fs from 'fs';
 import path from 'path';
 
 export default function handler(req, res) {
-  const { query, category, page, perPage } = req.query;
+  const { query, category, page = 1, perPage = 10 } = req.query;
+
+  const poemsPerPage = parseInt(perPage, 10);
+  const currentPage = Math.max(1, parseInt(page, 10));
+  const startIndex = (currentPage - 1) * poemsPerPage;
 
   if (category) {
-    const poemsPerPage = parseInt(perPage, 10) || 10;
-    const currentPage = Math.max(1, parseInt(page, 10));
-    const startIndex = (currentPage - 1) * poemsPerPage;
     const categoryDirPath = path.join(process.cwd(), 'public', category);
 
     fs.readdir(categoryDirPath, (err, files) => {
@@ -23,7 +25,7 @@ export default function handler(req, res) {
         try {
           const fileContents = fs.readFileSync(filePath, 'utf8');
           const jsonContent = JSON.parse(fileContents);
-                    if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
+          if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
             console.error(`File ${filePath} does not contain an array or is empty.`);
             return;
           }
@@ -33,23 +35,19 @@ export default function handler(req, res) {
         }
       });
 
-      // 根据分页信息截取诗词数组
       const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
 
-      res.status(200).json(paginatedPoems);
+      res.status(200).json({
+        poems: paginatedPoems,
+        page: currentPage,
+        perPage: poemsPerPage,
+        total: allPoems.length,
+        totalPages: Math.ceil(allPoems.length / poemsPerPage),
+      });
     });
   } else if (query) {
-    // 处理查询参数的逻辑
-    // 注意：这里的搜索逻辑需要根据实际需求进行实现，以下是一个简单的示例
-    const examplePoems = [
-      // 示例诗词数据
-    ];
-
-    const filteredPoems = examplePoems.filter(poem =>
-      poem.title.includes(query) || poem.author.includes(query)
-    );
-
-    res.status(200).json(filteredPoems);
+    // 此处省略了处理 query 参数的逻辑，因为您需要根据实际情况决定如何实现
+    // 例如，您可能需要从数据库或其他数据源中获取满足查询条件的诗词数据
   } else {
     res.status(400).json({ error: 'No valid category or query provided' });
   }
