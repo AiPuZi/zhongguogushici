@@ -74,7 +74,7 @@ export default function Home({ initialPoetryData }) {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    window.location.hash = category;
+    // window.location.hash = category;
   };
 
   // 处理搜索功能
