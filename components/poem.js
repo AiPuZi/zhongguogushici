@@ -1,4 +1,4 @@
-export default function Poem({ title, author, content }) {
+export default function Poem({ title, author, content, chapter }) {
   const combinedContent = content.join('<br><br>');
 
   return (
