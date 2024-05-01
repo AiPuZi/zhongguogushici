@@ -40,6 +40,9 @@ main {
     margin: 20px auto;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between; /* 平均分布每行的诗词 */
 }
 
 /* 古诗容器样式 */
@@ -57,14 +60,13 @@ main {
 
 /* 单个古诗样式 */
 .poem {
-    flex-basis: calc(33.333% - 10px);
+    width: calc(33.333% - 20px); /* 每个诗词占据行宽的三分之一减去间距 */
+    margin-bottom: 20px; /* 设置底部外边距 */
     text-align: center;
-    margin-right: 15px;
+    padding: 10px;
     box-sizing: border-box;
-    background-color: #f9f9f9; /* 设置背景颜色 */
-    padding: 10px; /* 根据需要调整内边距 */
-    border: 1px solid #ddd; /* 设置边框颜色 */
-    border: none;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
 }
 
 .poem h3 {
@@ -227,3 +229,9 @@ footer span:first-child {
 }
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
+@media screen and (max-width: 767px) {
+    .poem {
+        width: 100%; /* 在小屏幕上，每个诗词占据整行 */
+        margin-bottom: 15px;
+    }
+}
