@@ -67,6 +67,7 @@ main {
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
+    border: none;
 }
 
 .poem h3 {
