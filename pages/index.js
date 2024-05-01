@@ -61,16 +61,15 @@ export default function Home({ initialPoetryData }) {
   const poemsPerPage = 9; // 每页显示的诗词数量
 
 useEffect(() => {
-  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+  if (currentPage !== 1 || currentCategory !== 'quantangshi') {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      const processedData = preprocessPoetryData(data);
-      setPoetryData(processedData);
+      setPoems(data); // 这里应该使用 setPoems
     };
 
     loadPoetryData();
   }
-}, [currentCategory, currentPage]);
+}, [currentCategory, currentPage, poemsPerPage]);
   
   // 处理分页按钮点击事件
  const handlePageChange = (newPage) => {
