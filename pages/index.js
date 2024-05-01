@@ -14,10 +14,10 @@ function preprocessPoetryData(data) {
     }
 
     // 提取作者，如果不存在则提供默认值
-    const author = item.author || '佚名';
+    const author = item.author;
 
     // 提取标题，如果不存在则提供默认值
-    const title = item.title || item.rhythmic || '无题';
+    const title = item.title || item.rhythmic;
 
     return {
       title,
