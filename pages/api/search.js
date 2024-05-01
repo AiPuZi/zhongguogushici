@@ -10,7 +10,39 @@ export default function handler(req, res) {
   const startIndex = (currentPage - 1) * poemsPerPage;
 
   if (category) {
-    // ...处理分类参数的逻辑...
+    const categoryDirPath = path.join(process.cwd(), 'public', category);
+    fs.readdir(categoryDirPath, (err, files) => {
+      if (err) {
+        console.error(`Error reading directory ${categoryDirPath}:`, err);
+        return res.status(500).json({ error: 'Failed to read directory' });
+      }
+
+      let allPoems = [];
+      files.forEach(file => {
+        const filePath = path.join(categoryDirPath, file);
+        try {
+          const fileContents = fs.readFileSync(filePath, 'utf8');
+          try {
+            const jsonContent = JSON.parse(fileContents);
+            allPoems = allPoems.concat(jsonContent);
+          } catch (parseError) {
+            console.error(`Error parsing JSON from file ${filePath}:`, parseError);
+            // 跳过无效的 JSON 文件
+          }
+        } catch (readError) {
+          console.error(`Error reading file ${filePath}:`, readError);
+        }
+      });
+
+      const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
+      res.status(200).json({
+        poems: paginatedPoems,
+        page: currentPage,
+        perPage: poemsPerPage,
+        total: allPoems.length,
+        totalPages: Math.ceil(allPoems.length / poemsPerPage),
+      });
+    });
   } else if (query) {
     const allPoems = [];
     const publicDirPath = path.join(process.cwd(), 'public');
@@ -25,9 +57,18 @@ export default function handler(req, res) {
 
       poemFiles.forEach(file => {
         const filePath = path.join(categoryDirPath, file);
-        const fileContents = fs.readFileSync(filePath, 'utf8');
-        const jsonContent = JSON.parse(fileContents);
-        allPoems.push(...jsonContent);
+        try {
+          const fileContents = fs.readFileSync(filePath, 'utf8');
+          try {
+            const jsonContent = JSON.parse(fileContents);
+            allPoems.push(...jsonContent);
+          } catch (parseError) {
+            console.error(`Error parsing JSON from file ${filePath}:`, parseError);
+            // 跳过无效的 JSON 文件
+          }
+        } catch (readError) {
+          console.error(`Error reading file ${filePath}:`, readError);
+        }
       });
     });
 
