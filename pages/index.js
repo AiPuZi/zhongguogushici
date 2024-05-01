@@ -53,18 +53,33 @@ export async function getStaticProps() {
 }
 
 export default function Home({ initialPoetryData }) {
-  const [poems, setPoems] = useState(initialPoetryData); // 使用 initialState 初始化诗词数据
+  const [currentCategory, setCurrentCategory] = useState('quantangshi'); // 当前分类
+  const [poems, setPoems] = useState(initialPoetryData); // 诗词数据
+  const [searchInput, setSearchInput] = useState(''); // 搜索输入
   const [currentPage, setCurrentPage] = useState(1); // 当前页码
+  const [totalPages, setTotalPages] = useState(0); // 总页数
   const poemsPerPage = 9; // 每页显示的诗词数量
 
+useEffect(() => {
+  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+    const loadPoetryData = async () => {
+      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+      const processedData = preprocessPoetryData(data);
+      setPoetryData(processedData);
+    };
+
+    loadPoetryData();
+  }
+}, [currentCategory, currentPage]);
+  
   // 处理分页按钮点击事件
-  const handlePageChange = (newPage) => {
+ const handlePageChange = (newPage) => {
     fetch(`/api/poems?page=${newPage}&perPage=${poemsPerPage}`)
       .then((response) => response.json())
       .then((data) => {
-        setPoems(data.poems); // 更新诗词数据
-        setCurrentPage(newPage); // 更新当前页码
-        setTotalPages(data.totalPages); // 更新总页数
+        setPoems(data.poems);
+        setCurrentPage(newPage);
+        setTotalPages(data.totalPages);
       })
       .catch((error) => {
         console.error('Error fetching poems:', error);
@@ -75,7 +90,7 @@ export default function Home({ initialPoetryData }) {
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
+    setCurrentPage(1); 
     window.location.hash = category;
   };
 
