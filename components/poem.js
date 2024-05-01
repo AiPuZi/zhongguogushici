@@ -1,5 +1,8 @@
-export default function Poem({ title, author, content, chapter }) {
+export default function Poem({ title, author, content, chapter, comments }) {
   const combinedContent = content.join('<br><br>');
+  const commentElements = comments.map((comment, index) => (
+    <p key={index}>{comment}</p>
+  ));
 
   return (
     <div>
@@ -7,6 +10,9 @@ export default function Poem({ title, author, content, chapter }) {
       <h3>{title}</h3>
       <h4>{author}</h4>
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
+  <div className="comments">
+        {commentElements}
+      </div>
     </div>
   );
 }
