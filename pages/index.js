@@ -23,6 +23,7 @@ function preprocessPoetryData(data) {
       title,
       author,
       content, // 使用处理后的content数组
+      chapter: item.chapter || '',
     };
   });
 }
@@ -141,6 +142,7 @@ export default function Home({ initialPoetryData }) {
         section={poem.section}
         chapter={poem.chapter}
         content={poem.content}
+        chapter={poem.chapter}
       />
     </div>
   ))}
