@@ -18,12 +18,13 @@ function preprocessPoetryData(data) {
 
     // 提取标题，如果不存在则提供默认值
     const title = item.title || item.rhythmic;
+    const chapter = item.chapter || '';
 
     return {
       title,
       author,
       content, // 使用处理后的content数组
-      chapter: item.chapter || '',
+      chapter,
     };
   });
 }
