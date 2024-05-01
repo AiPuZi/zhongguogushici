@@ -21,6 +21,7 @@ export default function handler(req, res) {
   // 返回分页数据
   res.status(200).json({
     poems: paginatedPoems,
+    totalPages: Math.ceil(allPoems.length / poemsPerPage),
     page: pageNumber,
     perPage: poemsPerPage,
     total: allPoems.length,
