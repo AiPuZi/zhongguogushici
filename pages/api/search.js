@@ -10,44 +10,43 @@ export default function handler(req, res) {
   const startIndex = (currentPage - 1) * poemsPerPage;
 
   if (category) {
-    const categoryDirPath = path.join(process.cwd(), 'public', category);
+    // ...处理分类参数的逻辑...
+  } else if (query) {
+    const allPoems = [];
+    const publicDirPath = path.join(process.cwd(), 'public');
 
-    fs.readdir(categoryDirPath, (err, files) => {
-      if (err) {
-        console.error(`Error reading directory ${categoryDirPath}:`, err);
-        return res.status(500).json({ error: 'Failed to read directory' });
-      }
+    // 获取所有分类目录
+    const categories = fs.readdirSync(publicDirPath);
 
-      let allPoems = [];
+    // 读取每个分类目录中的诗词文件
+    categories.forEach(category => {
+      const categoryDirPath = path.join(publicDirPath, category);
+      const poemFiles = fs.readdirSync(categoryDirPath);
 
-      files.forEach(file => {
+      poemFiles.forEach(file => {
         const filePath = path.join(categoryDirPath, file);
-        try {
-          const fileContents = fs.readFileSync(filePath, 'utf8');
-          const jsonContent = JSON.parse(fileContents);
-          if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
-            console.error(`File ${filePath} does not contain an array or is empty.`);
-            return;
-          }
-          allPoems = allPoems.concat(jsonContent);
-        } catch (error) {
-          console.error(`Error reading or parsing file ${filePath}:`, error);
-        }
-      });
-
-      const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
-
-      res.status(200).json({
-        poems: paginatedPoems,
-        page: currentPage,
-        perPage: poemsPerPage,
-        total: allPoems.length,
-        totalPages: Math.ceil(allPoems.length / poemsPerPage),
+        const fileContents = fs.readFileSync(filePath, 'utf8');
+        const jsonContent = JSON.parse(fileContents);
+        allPoems.push(...jsonContent);
       });
     });
-  } else if (query) {
-    // 此处省略了处理 query 参数的逻辑，因为您需要根据实际情况决定如何实现
-    // 例如，您可能需要从数据库或其他数据源中获取满足查询条件的诗词数据
+
+    // 搜索包含查询关键词的诗词
+    const searchRegex = new RegExp(query, 'i'); // 不区分大小写
+    const filteredPoems = allPoems.filter(poem => 
+      searchRegex.test(poem.title) || searchRegex.test(poem.content.join(' ')) || (poem.author && searchRegex.test(poem.author))
+    );
+
+    // 分页
+    const paginatedPoems = filteredPoems.slice(startIndex, startIndex + poemsPerPage);
+
+    res.status(200).json({
+      poems: paginatedPoems,
+      page: currentPage,
+      perPage: poemsPerPage,
+      total: filteredPoems.length,
+      totalPages: Math.ceil(filteredPoems.length / poemsPerPage),
+    });
   } else {
     res.status(400).json({ error: 'No valid category or query provided' });
   }
