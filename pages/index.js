@@ -64,7 +64,7 @@ useEffect(() => {
   if (currentPage !== 1 || currentCategory !== 'quantangshi') {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoems(data); // 这里应该使用 setPoems
+      setPoems(data); // 使用 setPoems 而不是 setPoetryData
     };
 
     loadPoetryData();
