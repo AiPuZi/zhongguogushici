@@ -64,6 +64,7 @@ export default function Home({ initialPoetryData }) {
       .then((data) => {
         setPoems(data.poems); // 更新诗词数据
         setCurrentPage(newPage); // 更新当前页码
+        setTotalPages(data.totalPages); // 更新总页数
       })
       .catch((error) => {
         console.error('Error fetching poems:', error);
@@ -151,11 +152,11 @@ export default function Home({ initialPoetryData }) {
 </main>
 
        {/* 分页按钮 */}
-      <div className="pagination-buttons">
+     <div className="pagination-buttons">
         <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}>
           上一页
         </button>
-        <button onClick={() => handlePageChange(currentPage + 1)}>
+        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages}>
           下一页
         </button>
       </div>
