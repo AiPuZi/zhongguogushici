@@ -2,14 +2,11 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
-// 用于获取诗词数据的函数
-// 用于获取诗词数据的函数
-async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
-  const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => {
-    // 统一处理内容字段，确保它总是数组
-    let content = item.paragraphs || item.content || [];
+// 用于预处理并统一诗词数据格式的函数
+function preprocessPoetryData(data) {
+  return data.map(item => {
+    // 处理不同的内容字段，确保内容总是数组形式
+    let content = item.paragraphs || item.para || item.content;
     if (typeof content === 'string') {
       content = content.split('\n'); // 假设内容以换行符分割
     } else if (!Array.isArray(content)) {
@@ -17,37 +14,35 @@ async function getPoetryData(category, page, perPage) {
     }
 
     // 提取作者，如果不存在则提供默认值
-    const author = item.author;
+    const author = item.author || '佚名';
 
     // 提取标题，如果不存在则提供默认值
-    const title = item.title || item.rhythmic;
-
-    // 提取节和章信息，如果不存在则为空字符串
-    const section = item.section || '';
-    const chapter = item.chapter || '';
+    const title = item.title || item.rhythmic || '无题';
 
     return {
       title,
       author,
-      section,
-      chapter,
-      content,
+      content, // 使用处理后的content数组
     };
   });
 }
+
+// 用于获取诗词数据的函数
+async function getPoetryData(category, page, perPage) {
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const data = await response.json();
+  return preprocessPoetryData(data); // 使用 preprocessPoetryData 函数处理数据
+}
+
 // 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const poetryData = await response.json();
+  const processedData = preprocessPoetryData(poetryData); // 使用 preprocessPoetryData 函数处理数据
   return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
-        ...poem,
-        author: poem.author, 
-        content: Array.isArray(poem.content) ? poem.content : [],
-        comment: Array.isArray(poem.comment) ? poem.comment : []
-      })),
+      initialPoetryData: processedData,
     },
     revalidate: 10,
   };
@@ -61,15 +56,16 @@ export default function Home({ initialPoetryData }) {
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
-    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-      const loadPoetryData = async () => {
-        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-        setPoetryData(data);
-      };
+  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+    const loadPoetryData = async () => {
+      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+      const processedData = preprocessPoetryData(data);
+      setPoetryData(processedData);
+    };
 
-      loadPoetryData();
-    }
-  }, [currentCategory, currentPage]);
+    loadPoetryData();
+  }
+}, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
