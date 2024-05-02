@@ -54,7 +54,7 @@ export async function getStaticProps() {
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData);
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
@@ -132,7 +132,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
- <main id="poetry-content">
+<main id="poetry-content">
   {Array.isArray(poetryData) && poetryData.map((poem, index) => (
     <div key={index} className="poem">
       <Poem
