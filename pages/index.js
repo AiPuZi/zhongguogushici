@@ -44,7 +44,7 @@ export async function getStaticProps() {
   return {
     props: {
       initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || poem.rhythmic || ,
+        title: poem.title || poem.rhythmic || '',
         author: poem.author || '',
         section: poem.section || '',
         chapter: poem.chapter || '',
