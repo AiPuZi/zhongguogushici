@@ -2,6 +2,31 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
+// 这个 Poem 组件现在根据您的需求来决定如何显示诗词内容
+const Poem = ({ title, author, content }) => {
+  // 如果标题和作者都不存在，直接显示内容
+  if (!title && !author) {
+    return (
+      <div>
+        {content.map((line, index) => (
+          <p key={index}>{line}</p>
+        ))}
+      </div>
+    );
+  } else {
+    // 如果标题或作者存在，按照正常的格式显示
+    return (
+      <div>
+        {title && <h1>{title}</h1>}
+        {author && <p>作者：{author}</p>}
+        {content.map((line, index) => (
+          <p key={index}>{line}</p>
+        ))}
+      </div>
+    );
+  }
+};
+
 // 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
@@ -57,7 +82,7 @@ export default function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9;
+  const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
     if (currentPage !== 0 || currentCategory !== 'quantangshi') {
@@ -132,16 +157,14 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-  <main id="poetry-content">
+ <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
               title={poem.title}
               author={poem.author}
-              section={poem.section}
-              chapter={poem.chapter}
-              content={poem.content}
-              comments={poem.comments}
+              content={poem.content} // 这里只传递 content，因为 Poem 组件已经根据 title 和 author 来决定渲染逻辑
+              // 注意：这里不传递 section, chapter 和 comments，除非你的 Poem 组件需要它们
             />
           </div>
         ))}
