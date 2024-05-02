@@ -7,7 +7,6 @@ async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
-    // 统一处理内容字段，确保它总是数组
     let content = item.paragraphs || item.content || [];
     if (typeof content === 'string') {
       content = content.split('\n'); // 假设内容以换行符分割
@@ -15,16 +14,14 @@ async function getPoetryData(category, page, perPage) {
       content = []; // 如果内容既不是字符串也不是数组，使用空数组
     }
 
-    // 提取作者，如果不存在则提供默认值
-    const author = item.author;
-
-    // 提取标题，如果不存在则提供默认值
-    const title = item.title || item.rhythmic || ;
+    // 如果作者或标题不存在则直接使用内容的第一行作为标题
+    const title = item.title || item.rhythmic || content[0] || '无标题';
+    const author = item.author || '无名氏';
 
     // 提取节和章信息，如果不存在则为空字符串
     const section = item.section || '';
     const chapter = item.chapter || '';
-    const comments = Array.isArray(item.comment) ? item.comment : []; 
+    const comments = Array.isArray(item.comment) ? item.comment : [];
 
     return {
       title,
