@@ -9,21 +9,23 @@ async function getPoetryData(category, page, perPage) {
   return (Array.isArray(data) ? data : []).map(item => {
     let content = item.paragraphs || item.content || item.para || [];
     if (typeof content === 'string') {
-      content = content.split('\n'); // 假设内容以换行符分割
+      content = content.split('\n');
     } else if (!Array.isArray(content)) {
-      content = []; // 如果内容既不是字符串也不是数组，使用空数组
+      content = [];
     }
 
-    const title = item.title || item.rhythmic || item.section || '';
+    const title = item.title || '';
     const author = item.author || '';
     const chapter = item.chapter || '';
+    const section = item.section || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
     return {
-      title,    // 可能为空串
-      author,   // 可能为空串
+      title,
+      author,
       chapter,
-      content,  // 总是存在，可能为空数组
+      section,
+      content,
       comments,
     };
   });
