@@ -1,4 +1,4 @@
-export default function Poem({ title, author, content, chapter, comments }) {
+export default function Poem({ title, author, content, chapter, comments = [] }) {
   // 将内容数组转换为字符串，并用 <br><br> 分隔
   const combinedContent = content.join('<br><br>');
 
