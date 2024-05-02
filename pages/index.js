@@ -14,11 +14,9 @@ async function getPoetryData(category, page, perPage) {
       content = []; // 如果内容既不是字符串也不是数组，使用空数组
     }
 
-    // 只有当作者和标题都存在时才设置这些字段
     const title = item.title || item.rhythmic || '';
     const author = item.author || '';
 
-    // 提取节和章信息，如果不存在则为空字符串
     const section = item.section || '';
     const chapter = item.chapter || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
@@ -34,12 +32,10 @@ async function getPoetryData(category, page, perPage) {
   });
 }
 
-// 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  // 确保返回的数据是数组类型
   const poetryData = Array.isArray(data) ? data : [];
   return {
     props: {
@@ -61,7 +57,7 @@ export default function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
+  const poemsPerPage = 9;
 
   useEffect(() => {
     if (currentPage !== 0 || currentCategory !== 'quantangshi') {
@@ -74,7 +70,6 @@ export default function Home({ initialPoetryData }) {
     }
   }, [currentCategory, currentPage]);
 
-  // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
@@ -82,13 +77,11 @@ export default function Home({ initialPoetryData }) {
     window.location.hash = category;
   };
 
-  // 处理搜索功能
   const handleSearch = async (event) => {
     event.preventDefault();
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  // 处理分页功能
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
   };
@@ -139,8 +132,8 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-   <main id="poetry-content">
-        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+  <main id="poetry-content">
+        {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
               title={poem.title}
