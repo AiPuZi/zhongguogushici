@@ -2,11 +2,14 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
-// 用于预处理并统一诗词数据格式的函数
-function preprocessPoetryData(data) {
-  return data.map(item => {
-    // 处理不同的内容字段，确保内容总是数组形式
-    let content = item.paragraphs || item.para || item.content;
+// 用于获取诗词数据的函数
+// 用于获取诗词数据的函数
+async function getPoetryData(category, page, perPage) {
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const data = await response.json();
+  return (Array.isArray(data) ? data : []).map(item => {
+    // 统一处理内容字段，确保它总是数组
+    let content = item.paragraphs || item.content || [];
     if (typeof content === 'string') {
       content = content.split('\n'); // 假设内容以换行符分割
     } else if (!Array.isArray(content)) {
@@ -18,35 +21,35 @@ function preprocessPoetryData(data) {
 
     // 提取标题，如果不存在则提供默认值
     const title = item.title || item.rhythmic;
+
+    // 提取节和章信息，如果不存在则为空字符串
+    const section = item.section || '';
     const chapter = item.chapter || '';
-    const comments = item.comment || []; // 如果 comment 字段不存在，使用空数组
+    const comments = item.comment || []; 
 
     return {
       title,
       author,
-      content, // 使用处理后的content数组
+      section,
       chapter,
+      content,
       comments,
     };
   });
 }
-
-// 用于获取诗词数据的函数
-async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
-  const data = await response.json();
-  return preprocessPoetryData(data); // 使用 preprocessPoetryData 函数处理数据
-}
-
 // 使用 getStaticProps 来预渲染页面
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const poetryData = await response.json();
-  const processedData = preprocessPoetryData(poetryData); // 使用 preprocessPoetryData 函数处理数据
   return {
     props: {
-      initialPoetryData: processedData,
+      initialPoetryData: poetryData.map(poem => ({
+        ...poem,
+        author: poem.author, 
+        content: Array.isArray(poem.content) ? poem.content : [],
+        comment: Array.isArray(poem.comment) ? poem.comment : []
+      })),
     },
     revalidate: 10,
   };
@@ -60,16 +63,15 @@ export default function Home({ initialPoetryData }) {
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
-  if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      const processedData = preprocessPoetryData(data);
-      setPoetryData(processedData);
-    };
+    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
+      const loadPoetryData = async () => {
+        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+        setPoetryData(data);
+      };
 
-    loadPoetryData();
-  }
-}, [currentCategory, currentPage]);
+      loadPoetryData();
+    }
+  }, [currentCategory, currentPage]);
 
   // 处理导航链接点击事件
   const handleCategoryChange = (category, event) => {
@@ -127,7 +129,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
         <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
         <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
+        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主</a>
         <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
         <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
         <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
