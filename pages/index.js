@@ -14,9 +14,9 @@ async function getPoetryData(category, page, perPage) {
       content = []; // 如果内容既不是字符串也不是数组，使用空数组
     }
 
-    // 如果作者或标题不存在则直接使用内容的第一行作为标题
-    const title = item.title || item.rhythmic || content[0] || '无标题';
-    const author = item.author || '无名氏';
+    // 只有当作者和标题都存在时才设置这些字段
+    const title = item.title || item.rhythmic || '';
+    const author = item.author || '';
 
     // 提取节和章信息，如果不存在则为空字符串
     const section = item.section || '';
@@ -24,11 +24,11 @@ async function getPoetryData(category, page, perPage) {
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
     return {
-      title,
-      author,
+      title,    // 可能为空串
+      author,   // 可能为空串
       section,
       chapter,
-      content,
+      content,  // 总是存在，可能为空数组
       comments,
     };
   });
