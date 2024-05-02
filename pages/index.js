@@ -139,6 +139,7 @@ export default function Home({ initialPoetryData }) {
         title={poem.title}
         author={poem.author}
         content={poem.content}
+        comments={poem.comments}  // 确保传递 comments 属性，即使它是空数组
       />
     </div>
   ))}
