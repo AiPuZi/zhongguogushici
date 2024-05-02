@@ -39,6 +39,7 @@ export async function getStaticProps() {
   return {
     props: {
       initialPoetryData: poetryData.map(poem => ({
+        // 确保 'rhythmic' 字段被考虑，并且在 'title' 和 'section' 不存在时使用
         title: poem.title || poem.rhythmic || poem.section || '',
         author: poem.author || '',
         chapter: poem.chapter || '',
