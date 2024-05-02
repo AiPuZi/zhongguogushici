@@ -8,7 +8,7 @@ const Poem = ({ title, author, content }) => {
   if (!title && !author) {
     return (
       <div>
-        {content.map((line, index) => (
+        {content && content.map((line, index) => (
           <p key={index}>{line}</p>
         ))}
       </div>
@@ -19,7 +19,7 @@ const Poem = ({ title, author, content }) => {
       <div>
         {title && <h1>{title}</h1>}
         {author && <p>作者：{author}</p>}
-        {content.map((line, index) => (
+        {content && content.map((line, index) => (
           <p key={index}>{line}</p>
         ))}
       </div>
