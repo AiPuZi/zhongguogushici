@@ -1,6 +1,6 @@
 export default function Poem({ title, author, content, chapter, comments = [] }) {
-  // 将内容数组转换为字符串，并用 <br><br> 分隔
-  const combinedContent = content.join('<br><br>');
+  // 如果内容是数组，转换为字符串
+  const combinedContent = Array.isArray(content) ? content.join('<br><br>') : content;
 
   // 生成评论元素
   const commentElements = comments.map((comment, index) => (
@@ -23,8 +23,8 @@ export default function Poem({ title, author, content, chapter, comments = [] })
   return (
     <div>
       {chapter && <h5>{chapter}</h5>}
-      <h3>{title}</h3>
-      <h4>{author}</h4>
+      {title && <h3>{title}</h3>}
+      {author && <h4>{author}</h4>}
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
       <div className="comments">
         {commentElements}
