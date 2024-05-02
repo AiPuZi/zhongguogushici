@@ -6,14 +6,33 @@ import Poem from '../components/poem';
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  // 确保返回的数据是数组类型
   return (Array.isArray(data) ? data : []).map(item => {
-    // 处理每个诗词的数据
+    // 统一处理内容字段，确保它总是数组
+    let content = item.paragraphs || item.content || [];
+    if (typeof content === 'string') {
+      content = content.split('\n'); // 假设内容以换行符分割
+    } else if (!Array.isArray(content)) {
+      content = []; // 如果内容既不是字符串也不是数组，使用空数组
+    }
+
+    // 提取作者，如果不存在则提供默认值
+    const author = item.author;
+
+    // 提取标题，如果不存在则提供默认值
+    const title = item.title || item.rhythmic || ;
+
+    // 提取节和章信息，如果不存在则为空字符串
+    const section = item.section || '';
+    const chapter = item.chapter || '';
+    const comments = Array.isArray(item.comment) ? item.comment : []; 
+
     return {
-      title: item.title,
-      author: item.author || '佚名',
-      content: Array.isArray(item.content) ? item.content : [],
-      comments: Array.isArray(item.comment) ? item.comment : [],
+      title,
+      author,
+      section,
+      chapter,
+      content,
+      comments,
     };
   });
 }
@@ -28,8 +47,10 @@ export async function getStaticProps() {
   return {
     props: {
       initialPoetryData: poetryData.map(poem => ({
-        title: poem.title,
-        author: poem.author || '佚名',
+        title: poem.title || poem.rhythmic || ,
+        author: poem.author || '',
+        section: poem.section || '',
+        chapter: poem.chapter || '',
         content: Array.isArray(poem.content) ? poem.content : [],
         comments: Array.isArray(poem.comment) ? poem.comment : [],
       })),
