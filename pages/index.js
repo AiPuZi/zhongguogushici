@@ -7,24 +7,21 @@ async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || [];
+    let content = item.paragraphs || item.content || item.para || [];
     if (typeof content === 'string') {
       content = content.split('\n'); // 假设内容以换行符分割
     } else if (!Array.isArray(content)) {
       content = []; // 如果内容既不是字符串也不是数组，使用空数组
     }
 
-    const title = item.title || item.rhythmic || '';
+    const title = item.title || item.rhythmic || item.section || '';
     const author = item.author || '';
-
-    const section = item.section || '';
     const chapter = item.chapter || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
     return {
       title,    // 可能为空串
       author,   // 可能为空串
-      section,
       chapter,
       content,  // 总是存在，可能为空数组
       comments,
@@ -40,11 +37,10 @@ export async function getStaticProps() {
   return {
     props: {
       initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || poem.rhythmic || '',
+        title: poem.title || poem.rhythmic || poem.section || '',
         author: poem.author || '',
-        section: poem.section || '',
         chapter: poem.chapter || '',
-        content: Array.isArray(poem.content) ? poem.content : [],
+        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
         comments: Array.isArray(poem.comment) ? poem.comment : [],
       })),
     },
