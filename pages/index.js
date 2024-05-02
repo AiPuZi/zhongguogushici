@@ -133,17 +133,16 @@ export default function Home({ initialPoetryData }) {
       </nav>
       
  <main id="poetry-content">
-        {poetryData.map((poem, index) => (
-          <div key={index} className="poem">
-            <Poem
-              title={poem.title}
-              author={poem.author}
-              content={poem.content} // 这里只传递 content，因为 Poem 组件已经根据 title 和 author 来决定渲染逻辑
-              // 注意：这里不传递 section, chapter 和 comments，除非你的 Poem 组件需要它们
-            />
-          </div>
-        ))}
-      </main>
+  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content}
+      />
+    </div>
+  ))}
+</main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
