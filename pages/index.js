@@ -140,7 +140,6 @@ export default function Home({ initialPoetryData }) {
         title={poem.title}
         author={poem.author}
         content={poem.content}
-        paragraphs={poem.paragraphs}
         chapter={poem.chapter}
         section={poem.section}
         comments={poem.comments}
