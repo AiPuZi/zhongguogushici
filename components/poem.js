@@ -10,7 +10,6 @@ export default function Poem({ title, author, content, paragraphs, chapter, sect
       {subtitle && <h4>{subtitle}</h4>}
       {/* 如果有 title，就展示 title，否则如果有 rhythmic，就展示 rhythmic */}
       {title ? <h3>{title}</h3> : (rhythmic && <h3>{rhythmic}</h3>)}
-      {content && <p>{content}</p>}
       {paragraphs && paragraphs.map((para, index) => <p key={index}>{para}</p>)}
       {author && <h4>{author}</h4>}
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
