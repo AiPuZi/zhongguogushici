@@ -144,6 +144,7 @@ export default function Home({ initialPoetryData }) {
         section={poem.section}
         comments={poem.comments}
         rhythmic={poem.rhythmic}
+        content={poem.paragraphs}
       />
     </div>
   ))}
