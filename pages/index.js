@@ -143,6 +143,7 @@ export default function Home({ initialPoetryData }) {
         chapter={poem.chapter}
         section={poem.section}
         comments={poem.comments}
+        rhythmic={poem.rhythmic}
       />
     </div>
   ))}
