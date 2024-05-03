@@ -1,4 +1,4 @@
-export default function Poem({ title, author, paragraphs, chapter, section, comments, rhythmic }) {
+export default function Poem({ title, author, content, paragraphs, chapter, section, comments = [], rhythmic }) {
   const combinedContent = Array.isArray(content) ? content.join('<br><br>') : content;
   const subtitle = chapter || section; // 定义副标题
   
