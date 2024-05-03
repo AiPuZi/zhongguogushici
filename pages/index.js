@@ -20,13 +20,14 @@ async function getPoetryData(category, page, perPage) {
     const section = item.section || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
-    return {
-      title,
-      author,
-      chapter,
-      section,
-      content,
-      comments,
+  return {
+      title: item.title || '',
+      author: item.author || '',
+      chapter: item.chapter || '',
+      section: item.section || '',
+      content: content,
+      comments: Array.isArray(item.comment) ? item.comment : [],
+      rhythmic: item.rhythmic || '', 
     };
   });
 }
