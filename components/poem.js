@@ -1,7 +1,6 @@
-export default function Poem({ title, author, content, chapter, section, comments = [] }) {
+export default function Poem({ title, author, content, chapter, section, comments = [], rhythmic }) {
   const combinedContent = Array.isArray(content) ? content.join('<br><br>') : content;
   const subtitle = chapter || section; // 定义副标题
-
   const commentElements = comments.map((comment, index) => (
     <p key={index}>{comment}</p>
   ));
@@ -9,7 +8,8 @@ export default function Poem({ title, author, content, chapter, section, comment
   return (
     <div>
       {subtitle && <h4>{subtitle}</h4>}
-      <h3>{title}</h3>
+      {/* 如果有 title，就展示 title，否则如果有 rhythmic，就展示 rhythmic */}
+      {title ? <h3>{title}</h3> : (rhythmic && <h3>{rhythmic}</h3>)}
       {author && <h4>{author}</h4>}
       <div dangerouslySetInnerHTML={{ __html: combinedContent }} />
       <div className="comments">
