@@ -54,20 +54,19 @@ main {
 /* 单行古诗样式 */
 .poem-row {
     display: flex;
-    justify-content: flex-start; /* 从容器的开始处排列子元素，即诗词内容从左至右排列 */
-    margin-bottom: 20px;
+    justify-content: flex-start; /* 从行的起始端开始布置子元素 */
+    flex-wrap: wrap; /* 允许项目换行 */
+    gap: 10%; /* 设置子元素之间的间隔 */
 }
 
 /* 单个古诗样式 */
 .poem {
-    width: calc(33.333% - 20px); /* 每个诗词占据行宽的三分之一减去间距 */
-    margin-bottom: 20px; /* 设置底部外边距 */
+    flex: 1 1 calc(33.333% - 20px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
-    border: none;
 }
 
 .poem h3 {
@@ -232,7 +231,6 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     .poem {
-        width: 100%; /* 在小屏幕上，每个诗词占据整行 */
-        margin-bottom: 15px;
+        flex-basis: 100%; /* 在小屏幕上，每个诗词占据整行 */
     }
 }
