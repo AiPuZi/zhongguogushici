@@ -34,10 +34,10 @@ export default function Home({ initialPoetryData }) {
   }, [currentPage, currentCategory]);
 
   const handleCategoryChange = (category) => {
-    setCurrentCategory(category);
-    setCurrentPage(0);
-    setPoetryData([]);
-  };
+  setCurrentCategory(category);
+  setCurrentPage(0);
+  setPoetryData([]);
+};
 
   const goToNextPage = () => {
     if (!loading && poetryData.length >= poemsPerPage) {
