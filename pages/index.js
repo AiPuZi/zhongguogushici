@@ -2,93 +2,53 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
-// 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || item.para || [];
-    if (typeof content === 'string') {
-      content = content.split('\n');
-    } else if (!Array.isArray(content)) {
-      content = [];
-    }
-
-    const title = item.title || '';
-    const author = item.author || '';
-    const chapter = item.chapter || '';
-    const section = item.section || '';
-    const comments = Array.isArray(item.comment) ? item.comment : [];
-
-  return {
-      title: item.title || '',
-      author: item.author || '',
-      chapter: item.chapter || '',
-      section: item.section || '',
-      content: content,
-      comments: Array.isArray(item.comment) ? item.comment : [],
-      rhythmic: item.rhythmic || '', 
-    };
-  });
-}
-
-export async function getStaticProps() {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
- return {
-    props: {
-      initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || '',
-        author: poem.author || '',
-        chapter: poem.chapter || '',
-        section: poem.section || '',
-        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
-        comments: Array.isArray(poem.comment) ? poem.comment : [],
-        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
-      })),
-    },
-    revalidate: 10,
-  };
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    content: item.content || [],
+    comments: item.comments || [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [searchInput, setSearchInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
-  const [forceUpdate, setForceUpdate] = useState(false); // 新增forceUpdate状态
+  const poemsPerPage = 9;
 
   useEffect(() => {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(data);
-    };
+    setLoading(true);
+    getPoetryData(currentCategory, currentPage, poemsPerPage).then(newPoems => {
+      if (currentPage === 0) {
+        setPoetryData(newPoems);
+      } else {
+        setPoetryData(prevPoems => [...prevPoems, ...newPoems]);
+      }
+      setLoading(false);
+    });
+  }, [currentPage, currentCategory]);
 
-    loadPoetryData();
-  }, [currentCategory, currentPage, forceUpdate]); // 添加forceUpdate作为依赖项
-
-  const handleCategoryChange = (category, event) => {
-    event.preventDefault();
+  const handleCategoryChange = (category) => {
     setCurrentCategory(category);
     setCurrentPage(0);
-    setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
-    window.location.hash = category;
-  };
-
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
+    setPoetryData([]);
   };
 
   const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
+    if (!loading && poetryData.length >= poemsPerPage) {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+    if (!loading && currentPage > 0) {
+      setCurrentPage(prevPage => prevPage - 1);
+    }
   };
 
   return (
@@ -134,25 +94,14 @@ export default function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
-
-      {/* 分页按钮 */}
+        {poetryData.map((poem, index) => (
+          <Poem key={index} {...poem} />
+        ))}
+        {loading && <p>Loading...</p>}
+      </main>
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToPrevPage} disabled={loading || currentPage === 0}>上一页</button>
+        <button onClick={goToNextPage} disabled={loading || poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
@@ -166,3 +115,5 @@ export default function Home({ initialPoetryData }) {
     </>
   );
 }
+
+export async function getStaticProps() {
