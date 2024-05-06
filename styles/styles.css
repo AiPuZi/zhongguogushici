@@ -60,13 +60,15 @@ main {
 
 /* 单个古诗样式 */
 .poem {
-    flex: 1 1 calc(33.333% - 20px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex: 1 1 calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: none;
-    margin: 15px;
+    margin: 10px; /* 上下保持原来的距离 */
+    margin-left: 20px; /* 左边距 */
+    margin-right: 20px; /* 右边距 */
 }
 
 .poem h3 {
