@@ -133,7 +133,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-<main id="poetry-content" key={currentCategory}>
+<main id="poetry-content">
   {Array.isArray(poetryData) && poetryData.map((poem, index) => (
     <div key={index} className="poem">
       <Poem
