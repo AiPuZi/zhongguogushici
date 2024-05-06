@@ -56,7 +56,7 @@ main {
     display: flex;
     justify-content: flex-start; /* 从行的起始端开始布置子元素 */
     flex-wrap: wrap; /* 允许项目换行 */
-    gap: 10%; /* 设置子元素之间的间隔 */
+    gap: 20px; /* 设置子元素之间的间隔 */
 }
 
 /* 单个古诗样式 */
