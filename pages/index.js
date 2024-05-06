@@ -59,22 +59,22 @@ export default function Home({ initialPoetryData }) {
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
+  const [forceUpdate, setForceUpdate] = useState(false); // 新增forceUpdate状态
 
   useEffect(() => {
-    if (currentPage !== 0 || currentCategory !== 'quantangshi') {
-      const loadPoetryData = async () => {
-        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-        setPoetryData(data);
-      };
+    const loadPoetryData = async () => {
+      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+      setPoetryData(data);
+    };
 
-      loadPoetryData();
-    }
-  }, [currentCategory, currentPage]);
+    loadPoetryData();
+  }, [currentCategory, currentPage, forceUpdate]); // 添加forceUpdate作为依赖项
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
+    setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
     window.location.hash = category;
   };
 
