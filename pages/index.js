@@ -117,3 +117,15 @@ export default function Home({ initialPoetryData }) {
 }
 
 export async function getStaticProps() {
+  // 这里我们调用 getPoetryData 函数来获取全唐诗的第一页数据
+  const initialPoetryData = await getPoetryData('quantangshi', 0, 9);
+
+  // 返回的对象将会被用作页面组件的 props
+  return {
+    props: {
+      initialPoetryData,
+    },
+    // 你可以设置 revalidate 来开启 ISR，如果数据更新不频繁，可以设置较长时间
+    revalidate: 3600, // 例如，每小时更新一次
+  };
+}
