@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
 async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  // 使用环境变量来获取API的基础URL
+  const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return data.map(item => ({
     title: item.title || '',
