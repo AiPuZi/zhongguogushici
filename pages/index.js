@@ -17,12 +17,18 @@ async function getPoetryData(category, page, perPage) {
 }
 
 export default function Home({ initialPoetryData }) {
+  const [searchInput, setSearchInput] = useState('');
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9;
 
+const handleSearch = async (event) => {
+    event.preventDefault();
+    // 这里应该有搜索逻辑，比如更新状态或者跳转到搜索结果页面
+  };
+  
   useEffect(() => {
     setLoading(true);
     getPoetryData(currentCategory, currentPage, poemsPerPage).then(newPoems => {
