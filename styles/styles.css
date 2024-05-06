@@ -66,9 +66,7 @@ main {
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: none;
-    margin: 10px; /* 上下保持原来的距离 */
-    margin-left: 15px; /* 左边距 */
-    margin-right: 15px; /* 右边距 */
+    margin: 10px; 
 }
 
 .poem h3 {
