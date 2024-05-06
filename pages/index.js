@@ -37,17 +37,29 @@ export async function getStaticProps() {
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
   const poetryData = Array.isArray(data) ? data : [];
- return {
+
+  const processedPoetryData = poetryData.map(poem => {
+    let content = poem.content || poem.paragraphs || poem.para || [];
+    if (typeof content === 'string') {
+      content = content.split('\n');
+    } else if (!Array.isArray(content)) {
+      content = [];
+    }
+
+    return {
+      title: poem.title || '',
+      author: poem.author || '',
+      chapter: poem.chapter || '',
+      section: poem.section || '',
+      content: content,
+      comments: Array.isArray(poem.comment) ? poem.comment : [],
+      rhythmic: poem.rhythmic || '',
+    };
+  });
+
+  return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || '',
-        author: poem.author || '',
-        chapter: poem.chapter || '',
-        section: poem.section || '',
-        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
-        comments: Array.isArray(poem.comment) ? poem.comment : [],
-        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
-      })),
+      initialPoetryData: processedPoetryData,
     },
     revalidate: 10,
   };
