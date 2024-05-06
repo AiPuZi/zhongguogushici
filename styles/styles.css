@@ -56,7 +56,6 @@ main {
     display: flex;
     justify-content: flex-start; /* 从行的起始端开始布置子元素 */
     flex-wrap: wrap; /* 允许项目换行 */
-    gap: 20px;
 }
 
 /* 单个古诗样式 */
@@ -67,6 +66,7 @@ main {
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: none;
+    margin: 10px;
 }
 
 .poem h3 {
