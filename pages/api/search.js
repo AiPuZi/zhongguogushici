@@ -12,7 +12,7 @@ export default function handler(req, res) {
     const startIndex = (currentPage - 1) * poemsPerPage;
     const categoryDirPath = path.join(process.cwd(), 'public', category);
 
-    fs.readdir(categoryDirPath, (err, files) => {
+    fs.readdir(categoryDirPath, async (err, files) => {
       if (err) {
         console.error('Failed to read directory', err);
         return res.status(500).json({ error: 'Failed to read directory' });
@@ -21,58 +21,26 @@ export default function handler(req, res) {
       const validFiles = files.filter(file => file.endsWith('.json'));
       let allPoems = [];
 
-      validFiles.forEach(file => {
-        const filePath = path.join(categoryDirPath, file);
-        try {
-          const fileContents = fs.readFileSync(filePath, 'utf8');
+      try {
+        for (const file of validFiles) {
+          const filePath = path.join(categoryDirPath, file);
+          const fileContents = await fs.promises.readFile(filePath, 'utf8');
           const jsonContent = JSON.parse(fileContents);
           if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
             console.error(`File ${filePath} does not contain an array or is empty.`);
-            return;
+            continue;
           }
           allPoems = allPoems.concat(jsonContent);
-        } catch (error) {
-          console.error(`Error reading or parsing file ${filePath}:`, error);
-          return res.status(500).json({ error: 'Error reading or parsing file' });
         }
-      });
 
-      let paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
+        // 根据分页信息截取诗词数组
+        const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
 
-      // 检查是否需要加载更多诗词以填满当前页
-      if (paginatedPoems.length < poemsPerPage && allPoems.length < startIndex + poemsPerPage) {
-        // 计算剩余需要加载的诗词数量
-        const remainingPoemsToLoad = poemsPerPage - paginatedPoems.length;
-        // 计算下一个需要加载的文件的数量
-        const filesToLoad = Math.ceil(remainingPoemsToLoad / poemsPerPage);
-        let loadedFiles = 0;
-
-        // 加载剩余的文件
-        validFiles.forEach(file => {
-          const filePath = path.join(categoryDirPath, file);
-          try {
-            const fileContents = fs.readFileSync(filePath, 'utf8');
-            const jsonContent = JSON.parse(fileContents);
-            if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
-              console.error(`File ${filePath} does not contain an array or is empty.`);
-              return;
-            }
-            allPoems = allPoems.concat(jsonContent);
-            loadedFiles++;
-
-            if (loadedFiles === filesToLoad) {
-              // 获取填满当前页的诗词
-              paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
-              return false; // 终止循环
-            }
-          } catch (error) {
-            console.error(`Error reading or parsing file ${filePath}:`, error);
-            return res.status(500).json({ error: 'Error reading or parsing file' });
-          }
-        });
+        res.status(200).json(paginatedPoems);
+      } catch (error) {
+        console.error('Error reading or parsing file:', error);
+        return res.status(500).json({ error: 'Error reading or parsing file' });
       }
-
-      res.status(200).json(paginatedPoems);
     });
   } else if (query) {
     // 处理查询参数的逻辑
