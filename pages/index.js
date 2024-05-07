@@ -6,43 +6,20 @@ import Poem from '../components/poem';
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || item.para || [];
-    if (typeof content === 'string') {
-      content = content.split('\n');
-    } else if (!Array.isArray(content)) {
-      content = [];
-    }
-
-    const title = item.title || '';
-    const author = item.author || '';
-    const chapter = item.chapter || '';
-    const section = item.section || '';
-    const comments = Array.isArray(item.comment) ? item.comment : [];
-
-    return {
-      title: title,
-      author: author,
-      chapter: chapter,
-      section: section,
-      content: content,
-      comments: comments,
-      rhythmic: item.rhythmic || '', 
-    };
-  });
+  return Array.isArray(data) ? data : [];
 }
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const initialPoetryData = [];
+  const initialPoetryData = {};
 
   for (const category of categories) {
     const response = await fetch(`${baseUrl}/api/search?category=${category}&page=0&perPage=1`);
     const data = await response.json();
     const firstPoem = Array.isArray(data) ? data[0] || null : null;
     if (firstPoem) {
-      initialPoetryData.push({
+      initialPoetryData[category] = {
         title: firstPoem.title || '',
         author: firstPoem.author || '',
         chapter: firstPoem.chapter || '',
@@ -50,8 +27,7 @@ export async function getStaticProps() {
         content: Array.isArray(firstPoem.content) ? firstPoem.content : firstPoem.paragraphs || firstPoem.para || [],
         comments: Array.isArray(firstPoem.comment) ? firstPoem.comment : [],
         rhythmic: firstPoem.rhythmic || '',
-        category: category,
-      });
+      };
     }
   }
 
@@ -65,22 +41,20 @@ export async function getStaticProps() {
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [nextPageData, setNextPageData] = useState([]); // 新增状态来存储下一页的数据
+  const [poetryData, setPoetryData] = useState(initialPoetryData[currentCategory] || []);
+  const [nextPageData, setNextPageData] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
+  const poemsPerPage = 9;
 
   useEffect(() => {
-    // 加载第一页数据和下一页数据
     loadPoetryData();
-  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
+  }, [currentCategory, currentPage]);
 
   const loadPoetryData = async () => {
     const currentPageData = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-    setPoetryData(currentPageData);
-    
-    // 预加载下一页的数据
+    setPoetryData(prevData => [...prevData, ...currentPageData]);
+
     const nextPage = currentPage + 1;
     const nextPageData = await getPoetryData(currentCategory, nextPage, poemsPerPage);
     setNextPageData(nextPageData);
@@ -89,7 +63,7 @@ export default function Home({ initialPoetryData }) {
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0); // 切换分类时，返回第一页
+    setCurrentPage(0);
     window.location.hash = category;
   };
 
@@ -100,9 +74,9 @@ export default function Home({ initialPoetryData }) {
 
   const goToNextPage = async () => {
     setCurrentPage(prevPage => prevPage + 1);
+    setPoetryData(prevData => [...prevData, ...nextPageData]);
     const nextPageData = await getPoetryData(currentCategory, currentPage + 1, poemsPerPage);
     setNextPageData(nextPageData);
-    setPoetryData(nextPageData); // 更新当前页数据为预加载的下一页数据
   };
 
   const goToPrevPage = () => {
@@ -134,21 +108,9 @@ export default function Home({ initialPoetryData }) {
       </header>
               
       <nav className="poetry-navigation">
-       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
-        <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
-        <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
-        <a href="#quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
-        <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
-        <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
-        <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
-        <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
-        <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
-        <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
-        <a href="#mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
-        <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
-        <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
+        {Object.keys(initialPoetryData).map((category, index) => (
+          <a key={index} href={`#${category}`} onClick={(e) => handleCategoryChange(category, e)}>{category}</a>
+        ))}
       </nav>
       
       <main id="poetry-content">
@@ -183,4 +145,3 @@ export default function Home({ initialPoetryData }) {
     </>
   );
 }
-
