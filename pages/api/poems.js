@@ -37,7 +37,7 @@ export default function handler(req, res) {
         }
       });
 
-      const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
+      let paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
 
       // 检查是否需要加载更多诗词以填满当前页
       if (paginatedPoems.length < poemsPerPage && allPoems.length < startIndex + poemsPerPage) {
