@@ -58,26 +58,22 @@ export default function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [isLoading, setIsLoading] = useState(false); // 添加加载状态
+  const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
     // 加载第一页数据
     loadPoetryData();
-  }, []); // 空依赖数组表示只在组件挂载时执行
+  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
 
   const loadPoetryData = async () => {
-    setIsLoading(true); // 开始加载数据时设置加载状态为true
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
     setPoetryData(data);
-    setIsLoading(false); // 数据加载完成后设置加载状态为false
   };
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
-    setPoetryData([]);
-    await loadPoetryData(); // 等待数据加载完成
+    setCurrentPage(0); // 切换分类时，返回第一页
     window.location.hash = category;
   };
 
@@ -87,9 +83,11 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    if (!isLoading) { // 如果没有在加载数据，则允许点击下一页
-      setCurrentPage(prevPage => prevPage + 1);
-    }
+    setCurrentPage(prevPage => {
+      const nextPage = prevPage + 1;
+      loadPoetryData(nextPage); // 加载下一页的数据
+      return nextPage;
+    });
   };
 
   const goToPrevPage = () => {
