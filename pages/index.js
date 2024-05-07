@@ -85,9 +85,12 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  const goToNextPage = async () => {
-  await setCurrentPage(prevPage => prevPage + 1);
-  loadPoetryData();
+  const goToNextPage = () => {
+  setCurrentPage(prevPage => {
+    const nextPage = prevPage + 1;
+    loadPoetryData(nextPage);
+    return nextPage;
+  });
 };
 
   const goToPrevPage = () => {
