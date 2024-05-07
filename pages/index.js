@@ -153,8 +153,8 @@ export default function Home({ initialPoetryData }) {
       </main>
 
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0 || isLoading}>上一页</button>
-        <button onClick={goToNextPage} disabled={isLoading}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
       
       <footer>
