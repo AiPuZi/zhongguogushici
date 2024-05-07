@@ -36,10 +36,10 @@ export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
+  const initialPoetryData = Array.isArray(data) ? data : [];
   return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
+      initialPoetryData: initialPoetryData.map(poem => ({
         title: poem.title || '',
         author: poem.author || '',
         chapter: poem.chapter || '',
@@ -60,21 +60,12 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  const loadPoetryData = async () => {
-    const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-    setPoetryData(data);
-  };
-
-  useEffect(() => {
-    // 加载第一页数据
-    loadPoetryData();
-  }, []); // 空依赖数组表示只在组件挂载时执行
-
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    loadPoetryData();
+    const data = await getPoetryData(category, 0, poemsPerPage);
+    setPoetryData(data);
     window.location.hash = category;
   };
 
@@ -83,16 +74,18 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => {
-      const nextPage = prevPage + 1;
-      loadPoetryData(); // 加载下一页的数据
-      return nextPage;
-    });
+  const goToNextPage = async () => {
+    const nextPage = currentPage + 1;
+    const data = await getPoetryData(currentCategory, nextPage, poemsPerPage);
+    setPoetryData(data);
+    setCurrentPage(nextPage);
   };
 
-  const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+  const goToPrevPage = async () => {
+    const prevPage = currentPage > 0 ? currentPage - 1 : 0;
+    const data = await getPoetryData(currentCategory, prevPage, poemsPerPage);
+    setPoetryData(data);
+    setCurrentPage(prevPage);
   };
 
   return (
