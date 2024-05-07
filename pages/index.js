@@ -60,22 +60,21 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  const loadPoetryData = async (page) => {
-    const data = await getPoetryData(currentCategory, page, poemsPerPage);
-    setPoetryData(data);
-  };
-
   useEffect(() => {
     // 加载第一页数据
     loadPoetryData(currentPage);
   }, [currentPage]); // currentPage 发生变化时重新加载数据
 
+  const loadPoetryData = async (page) => {
+    const data = await getPoetryData(currentCategory, page, poemsPerPage);
+    setPoetryData(data);
+  };
+
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0); // 切换分类时回到第一页
-    const data = await getPoetryData(category, 0, poemsPerPage);
-    setPoetryData(data);
+    loadPoetryData(0);
     window.location.hash = category;
   };
 
@@ -85,7 +84,11 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    await setCurrentPage(prevPage => prevPage + 1);
+    setCurrentPage(prevPage => {
+      const nextPage = prevPage + 1;
+      loadPoetryData(nextPage);
+      return nextPage;
+    });
   };
 
   const goToPrevPage = () => {
