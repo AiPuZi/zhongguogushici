@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import Poem from '../components/poem';
+import poem from '../components/poem';
 
 // 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
