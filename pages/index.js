@@ -71,11 +71,13 @@ export default function Home({ initialPoetryData }) {
     }
   }, [currentCategory, currentPage]);
 
-  const handleCategoryChange = (category, event) => {
+  const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
     setPoetryData([]);
+    const data = await getPoetryData(category, 0, poemsPerPage);
+    setPoetryData(data);
     window.location.hash = category;
   };
 
@@ -134,7 +136,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-<main id="poetry-content">
+ <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
