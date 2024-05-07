@@ -66,9 +66,8 @@ export default function Home({ initialPoetryData }) {
   };
 
   useEffect(() => {
-    // 加载第一页数据
-    loadPoetryData(0);
-  }, []); // 空依赖数组表示只在组件挂载时执行
+  loadPoetryData(currentPage);
+}, [currentPage]);
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
