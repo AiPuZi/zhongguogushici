@@ -34,21 +34,12 @@ async function getPoetryData(category, page, perPage) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const responseFirstPage = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-  const responseSecondPage = await fetch(`${baseUrl}/api/search?category=quantangshi&page=1&perPage=9`);
-  
-  const dataFirstPage = await responseFirstPage.json();
-  const dataSecondPage = await responseSecondPage.json();
-
-  const poetryDataFirstPage = Array.isArray(dataFirstPage) ? dataFirstPage : [];
-  const poetryDataSecondPage = Array.isArray(dataSecondPage) ? dataSecondPage : [];
-
+  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=1`); // 只获取第一个文件
+  const data = await response.json();
+  const poetryData = Array.isArray(data) ? data : [];
   return {
     props: {
-      initialPoetryData: [
-        ...poetryDataFirstPage,
-        ...poetryDataSecondPage
-      ].map(poem => ({
+      initialPoetryData: poetryData.map(poem => ({
         title: poem.title || '',
         author: poem.author || '',
         chapter: poem.chapter || '',
@@ -62,18 +53,17 @@ export async function getStaticProps() {
   };
 }
 
-
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [poetryData, setPoetryData] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
-    // 加载第一页数据
+    // 加载第一个文件的数据
     loadPoetryData();
-  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
+  }, [currentCategory]); // 当 currentCategory 更新时执行
 
   const loadPoetryData = async () => {
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
@@ -90,14 +80,6 @@ export default function Home({ initialPoetryData }) {
   const handleSearch = async (event) => {
     event.preventDefault();
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
-
-  const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
