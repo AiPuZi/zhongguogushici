@@ -2,28 +2,52 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
+// 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => ({
-    title: item.title || '',
-    author: item.author || '',
-    chapter: item.chapter || '',
-    section: item.section || '',
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : (item.content || item.para || '').split('\n'),
-    comments: Array.isArray(item.comment) ? item.comment : [],
-    rhythmic: item.rhythmic || '', 
-  }));
+  return (Array.isArray(data) ? data : []).map(item => {
+    let content = item.paragraphs || item.content || item.para || [];
+    if (typeof content === 'string') {
+      content = content.split('\n');
+    } else if (!Array.isArray(content)) {
+      content = [];
+    }
+
+    const title = item.title || '';
+    const author = item.author || '';
+    const chapter = item.chapter || '';
+    const section = item.section || '';
+    const comments = Array.isArray(item.comment) ? item.comment : [];
+
+    return {
+      title: title,
+      author: author,
+      chapter: chapter,
+      section: section,
+      content: content,
+      comments: comments,
+      rhythmic: item.rhythmic || '', 
+    };
+  });
 }
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  const poetryData = Array.isArray(data) ? data.filter(poem => poem.paragraphs && poem.paragraphs.length > 0) : [];
+  const poetryData = Array.isArray(data) ? data : [];
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: poetryData.map(poem => ({
+        title: poem.title || '',
+        author: poem.author || '',
+        chapter: poem.chapter || '',
+        section: poem.section || '',
+        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
+        comments: Array.isArray(poem.comment) ? poem.comment : [],
+        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
+      })),
     },
     revalidate: 10,
   };
@@ -31,28 +55,26 @@ export async function getStaticProps() {
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData);
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const poemsPerPage = 9;
+  const [currentPage, setCurrentPage] = useState(0);
+  const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(prevData => {
-        const newData = data.filter(newPoem => newPoem.content && newPoem.content.length > 0 && !prevData.some(prevPoem => prevPoem.title === newPoem.title && prevPoem.author === newPoem.author));
-        return [...prevData, ...newData];
-      });
+      setPoetryData(prevData => [...prevData, ...data]);
     };
 
-    loadPoetryData();
+    if (currentPage > 0) {
+      loadPoetryData();
+    }
   }, [currentCategory, currentPage]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(1);
+    setCurrentPage(0);
     setPoetryData([]);
     window.location.hash = category;
   };
@@ -67,7 +89,7 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 1 ? prevPage - 1 : 1));
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
@@ -129,7 +151,7 @@ export default function Home({ initialPoetryData }) {
       </main>
 
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
         <button onClick={goToNextPage}>下一页</button>
       </div>
           
