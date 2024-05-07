@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
 async function getPoetryData(category, page, perPage) {
@@ -33,49 +33,24 @@ export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData);
   const [searchInput, setSearchInput] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const poemsPerPage = 9;
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const observer = useRef();
 
   useEffect(() => {
     const loadPoetryData = async () => {
-      setLoading(true);
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setLoading(false);
       setPoetryData(prevData => [...prevData, ...data]);
     };
 
-    if (currentPage !== 0 && !loading && hasMore) {
-      loadPoetryData();
-    }
+    loadPoetryData();
   }, [currentCategory, currentPage]);
-
-  useEffect(() => {
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setCurrentPage(prevPage => prevPage + 1);
-      }
-    }, { threshold: 1 });
-
-    if (observer.current) {
-      observer.current.observe(document.querySelector('#loadMore'));
-    }
-
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [hasMore]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
+    setCurrentPage(1);
     setPoetryData([]);
-    setHasMore(true);
     window.location.hash = category;
   };
 
@@ -89,7 +64,7 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+    setCurrentPage(prevPage => (prevPage > 1 ? prevPage - 1 : 1));
   };
 
   return (
@@ -148,14 +123,11 @@ export default function Home({ initialPoetryData }) {
             />
           </div>
         ))}
-        <div id="loadMore" style={{ height: '10px' }}></div>
-        {loading && <p>Loading...</p>}
-        {!hasMore && <p>No more poems to load.</p>}
       </main>
 
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={!hasMore}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
+        <button onClick={goToNextPage}>下一页</button>
       </div>
           
       <div className="attribution">
