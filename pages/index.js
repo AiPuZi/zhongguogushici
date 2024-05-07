@@ -60,20 +60,21 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  useEffect(() => {
-    // 加载第一页数据
-    loadPoetryData();
-  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
-
   const loadPoetryData = async () => {
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
     setPoetryData(data);
   };
 
+  useEffect(() => {
+    // 加载第一页数据
+    loadPoetryData();
+  }, []); // 空依赖数组表示只在组件挂载时执行
+
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0); // 切换分类时，返回第一页
+    setCurrentPage(0);
+    loadPoetryData();
     window.location.hash = category;
   };
 
@@ -85,7 +86,7 @@ export default function Home({ initialPoetryData }) {
   const goToNextPage = () => {
     setCurrentPage(prevPage => {
       const nextPage = prevPage + 1;
-      loadPoetryData(nextPage); // 加载下一页的数据
+      loadPoetryData();
       return nextPage;
     });
   };
@@ -136,7 +137,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
- <main id="poetry-content">
+      <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
@@ -154,14 +155,14 @@ export default function Home({ initialPoetryData }) {
 
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage}>下一页</button>
       </div>
-
-          <div className="attribution">
+          
+      <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-          
+      
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
