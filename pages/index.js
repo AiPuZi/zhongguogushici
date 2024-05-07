@@ -68,7 +68,7 @@ export default function Home({ initialPoetryData }) {
 
   useEffect(() => {
     // 加载第一页数据
-    loadPoetryData(currentPage); // 在这里传入 currentPage
+    loadPoetryData(currentPage);
   }, []); // 空依赖数组表示只在组件挂载时执行
 
   const handleCategoryChange = async (category, event) => {
