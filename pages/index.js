@@ -66,10 +66,15 @@ export default function Home({ initialPoetryData }) {
       setPoetryData(data);
     };
 
-    if (currentPage > 0) {
+    if (currentPage >= 0) {
       loadPoetryData();
     }
   }, [currentCategory, currentPage]);
+
+  useEffect(() => {
+    // 加载第一页数据
+    loadPoetryData();
+  }, []); // 空依赖数组表示只在组件挂载时执行
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
