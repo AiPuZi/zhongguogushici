@@ -1,35 +1,20 @@
+
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Poem from '../components/poem';
 
-// 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || item.para || [];
-    if (typeof content === 'string') {
-      content = content.split('\n');
-    } else if (!Array.isArray(content)) {
-      content = [];
-    }
-
-    const title = item.title || '';
-    const author = item.author || '';
-    const chapter = item.chapter || '';
-    const section = item.section || '';
-    const comments = Array.isArray(item.comment) ? item.comment : [];
-
-  return {
-      title: item.title || '',
-      author: item.author || '',
-      chapter: item.chapter || '',
-      section: item.section || '',
-      content: content,
-      comments: Array.isArray(item.comment) ? item.comment : [],
-      rhythmic: item.rhythmic || '', 
-    };
-  });
+  return (Array.isArray(data) ? data : []).map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : (item.content || item.para || '').split('\n'),
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '', 
+  }));
 }
 
 export async function getStaticProps() {
@@ -37,17 +22,9 @@ export async function getStaticProps() {
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
   const poetryData = Array.isArray(data) ? data : [];
- return {
+  return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || '',
-        author: poem.author || '',
-        chapter: poem.chapter || '',
-        section: poem.section || '',
-        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
-        comments: Array.isArray(poem.comment) ? poem.comment : [],
-        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
-      })),
+      initialPoetryData: poetryData,
     },
     revalidate: 10,
   };
@@ -55,40 +32,57 @@ export async function getStaticProps() {
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [poetryData, setPoetryData] = useState(initialPoetryData);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
-  const [forceUpdate, setForceUpdate] = useState(false); // 新增forceUpdate状态
+  const poemsPerPage = 9;
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef();
 
   useEffect(() => {
     const loadPoetryData = async () => {
+      setLoading(true);
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(data);
+      setLoading(false);
+      setPoetryData(prevData => [...prevData, ...data]);
     };
 
-    loadPoetryData();
-  }, [currentCategory, currentPage, forceUpdate]); // 添加forceUpdate作为依赖项
+    if (currentPage !== 0 && !loading && hasMore) {
+      loadPoetryData();
+    }
+  }, [currentCategory, currentPage]);
+
+  useEffect(() => {
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setCurrentPage(prevPage => prevPage + 1);
+      }
+    }, { threshold: 1 });
+
+    if (observer.current) {
+      observer.current.observe(document.querySelector('#loadMore'));
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [hasMore]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
+    setPoetryData([]);
+    setHasMore(true);
     window.location.hash = category;
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
-
-  const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
@@ -114,7 +108,7 @@ export default function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-
+              
       <nav className="poetry-navigation">
        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
@@ -134,20 +128,23 @@ export default function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
+        {poetryData.map((poem, index) => (
+          <div key={index} className="poem">
+            <Poem
+              title={poem.title}
+              author={poem.author}
+              content={poem.content}
+              chapter={poem.chapter}
+              section={poem.section}
+              comments={poem.comments}
+              rhythmic={poem.rhythmic}
+            />
+          </div>
+        ))}
+        <div id="loadMore" style={{ height: '10px' }}></div>
+        {loading && <p>Loading...</p>}
+        {!hasMore && <p>No more poems to load.</p>}
+      </main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
