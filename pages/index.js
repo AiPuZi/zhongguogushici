@@ -66,14 +66,14 @@ export default function Home({ initialPoetryData }) {
   };
 
   useEffect(() => {
-  loadPoetryData(currentPage);
-}, [currentPage]);
+    // 加载第一页数据
+    loadPoetryData(currentPage);
+  }, [currentPage]); // currentPage 发生变化时重新加载数据
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
-    setPoetryData([]);
+    setCurrentPage(0); // 切换分类时回到第一页
     const data = await getPoetryData(category, 0, poemsPerPage);
     setPoetryData(data);
     window.location.hash = category;
@@ -84,21 +84,13 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
- const goToNextPage = () => {
-  setCurrentPage(prevPage => {
-    const nextPage = prevPage + 1;
-    loadPoetryData(nextPage);
-    return nextPage;
-  });
-};
+  const goToNextPage = async () => {
+    await setCurrentPage(prevPage => prevPage + 1);
+  };
 
-const goToPrevPage = () => {
-  setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-};
-
-  useEffect(() => {
-    loadPoetryData(currentPage);
-  }, [currentPage]); // 在 currentPage 改变时重新加载数据
+  const goToPrevPage = () => {
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+  };
 
   return (
     <>
