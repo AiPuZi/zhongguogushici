@@ -88,10 +88,13 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-    setPoetryData(nextPageData); // 更新当前页数据为预加载的下一页数据
-  };
+  const goToNextPage = async () => {
+  setCurrentPage(prevPage => prevPage + 1);
+  const nextPage = currentPage + 1;
+  const nextPageData = await getPoetryData(currentCategory, nextPage, poemsPerPage);
+  setNextPageData(nextPageData);
+  setPoetryData(nextPageData); // 更新当前页数据为预加载的下一页数据
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
