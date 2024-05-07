@@ -12,14 +12,14 @@ async function getPoetryData(category, page, perPage) {
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const initialPoetryData = {};
+  const initialPoetryData = [];
 
   for (const category of categories) {
     const response = await fetch(`${baseUrl}/api/search?category=${category}&page=0&perPage=1`);
     const data = await response.json();
     const firstPoem = Array.isArray(data) ? data[0] || null : null;
     if (firstPoem) {
-      initialPoetryData[category] = {
+      initialPoetryData.push({
         title: firstPoem.title || '',
         author: firstPoem.author || '',
         chapter: firstPoem.chapter || '',
@@ -27,7 +27,8 @@ export async function getStaticProps() {
         content: Array.isArray(firstPoem.content) ? firstPoem.content : firstPoem.paragraphs || firstPoem.para || [],
         comments: Array.isArray(firstPoem.comment) ? firstPoem.comment : [],
         rhythmic: firstPoem.rhythmic || '',
-      };
+        category: category,
+      });
     }
   }
 
@@ -38,6 +39,7 @@ export async function getStaticProps() {
     revalidate: 10,
   };
 }
+
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
