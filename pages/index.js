@@ -97,7 +97,6 @@ export default function Home({ initialPoetryData }) {
     if (nextPageData) {
       // 如果下一页的数据已经预加载完成，则直接显示
       setPoetryData(nextPageData);
-      preloadNextPage(); // 预加载下一页的数据
     }
   };
 
