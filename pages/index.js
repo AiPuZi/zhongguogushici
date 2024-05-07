@@ -61,8 +61,8 @@ export default function Home({ initialPoetryData }) {
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
-  loadPoetryData(); // 确保这个函数使用的是最新的 currentPage 状态
-}, [currentPage]); // 当 currentPage 更新时，重新调用此函数
+  loadPoetryData(currentCategory, currentPage, poemsPerPage);
+}, [currentCategory, currentPage, poemsPerPage]);
 
   const loadPoetryData = async () => {
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
