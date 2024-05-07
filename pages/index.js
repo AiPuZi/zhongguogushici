@@ -74,7 +74,7 @@ export default function Home({ initialPoetryData }) {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0); // 切换分类时回到第一页
-    loadPoetryData(0);
+    await loadPoetryData(0);
     window.location.hash = category;
   };
 
@@ -84,11 +84,7 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    setCurrentPage(prevPage => {
-      const nextPage = prevPage + 1;
-      loadPoetryData(nextPage);
-      return nextPage;
-    });
+    await setCurrentPage(prevPage => prevPage + 1);
   };
 
   const goToPrevPage = () => {
