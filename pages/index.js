@@ -84,8 +84,10 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    await setCurrentPage(prevPage => prevPage + 1);
-  };
+  const nextPage = currentPage + 1;
+  await loadPoetryData(nextPage);
+  setCurrentPage(nextPage);
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
