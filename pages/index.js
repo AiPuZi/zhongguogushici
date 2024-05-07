@@ -58,22 +58,26 @@ export default function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
+  const [isLoading, setIsLoading] = useState(false); // 添加加载状态
 
   useEffect(() => {
     // 加载第一页数据
     loadPoetryData();
-  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
+  }, []); // 空依赖数组表示只在组件挂载时执行
 
   const loadPoetryData = async () => {
+    setIsLoading(true); // 开始加载数据时设置加载状态为true
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
     setPoetryData(data);
+    setIsLoading(false); // 数据加载完成后设置加载状态为false
   };
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0); // 切换分类时，返回第一页
+    setCurrentPage(0);
+    setPoetryData([]);
+    await loadPoetryData(); // 等待数据加载完成
     window.location.hash = category;
   };
 
@@ -83,11 +87,9 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    setCurrentPage(prevPage => {
-      const nextPage = prevPage + 1;
-      loadPoetryData(nextPage); // 加载下一页的数据
-      return nextPage;
-    });
+    if (!isLoading) { // 如果没有在加载数据，则允许点击下一页
+      setCurrentPage(prevPage => prevPage + 1);
+    }
   };
 
   const goToPrevPage = () => {
@@ -153,13 +155,8 @@ export default function Home({ initialPoetryData }) {
       </main>
 
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage}>下一页</button>
-      </div>
-          
-      <div className="attribution">
-        本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
-        <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
+        <button onClick={goToPrevPage} disabled={currentPage === 0 || isLoading}>上一页</button>
+        <button onClick={goToNextPage} disabled={isLoading}>下一页</button>
       </div>
       
       <footer>
