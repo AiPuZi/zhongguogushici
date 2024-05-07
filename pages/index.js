@@ -56,18 +56,24 @@ export async function getStaticProps() {
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [nextPageData, setNextPageData] = useState([]); // 新增状态来存储下一页的数据
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
-    // 加载第一页数据
+    // 加载第一页数据和下一页数据
     loadPoetryData();
   }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
 
   const loadPoetryData = async () => {
-    const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-    setPoetryData(data);
+    const currentPageData = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+    setPoetryData(currentPageData);
+    
+    // 预加载下一页的数据
+    const nextPage = currentPage + 1;
+    const nextPageData = await getPoetryData(currentCategory, nextPage, poemsPerPage);
+    setNextPageData(nextPageData);
   };
 
   const handleCategoryChange = async (category, event) => {
@@ -84,6 +90,7 @@ export default function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
+    setPoetryData(nextPageData); // 更新当前页数据为预加载的下一页数据
   };
 
   const goToPrevPage = () => {
@@ -150,7 +157,7 @@ export default function Home({ initialPoetryData }) {
 
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
       </div>
 
           <div className="attribution">
