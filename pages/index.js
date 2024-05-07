@@ -1,4 +1,3 @@
-
 import Head from 'next/head';
 import { useState, useEffect, useRef } from 'react';
 import Poem from '../components/poem';
@@ -85,6 +84,14 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
+  const goToNextPage = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+  };
+
+  const goToPrevPage = () => {
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+  };
+
   return (
     <>
       <Head>
@@ -146,12 +153,11 @@ export default function Home({ initialPoetryData }) {
         {!hasMore && <p>No more poems to load.</p>}
       </main>
 
-      {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={!hasMore}>下一页</button>
       </div>
-
+          
       <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
