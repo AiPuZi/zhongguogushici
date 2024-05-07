@@ -36,10 +36,10 @@ export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  const initialPoetryData = Array.isArray(data) ? data : [];
+  const poetryData = Array.isArray(data) ? data : [];
   return {
     props: {
-      initialPoetryData: initialPoetryData.map(poem => ({
+      initialPoetryData: poetryData.map(poem => ({
         title: poem.title || '',
         author: poem.author || '',
         chapter: poem.chapter || '',
@@ -73,7 +73,7 @@ export default function Home({ initialPoetryData }) {
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
+    setCurrentPage(0); // 切换分类时，返回第一页
     window.location.hash = category;
   };
 
@@ -82,15 +82,11 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  const goToNextPage = async () => {
-    setCurrentPage(prevPage => {
-      const nextPage = prevPage + 1;
-      loadPoetryData(nextPage); // 加载下一页的数据
-      return nextPage;
-    });
+  const goToNextPage = () => {
+    setCurrentPage(prevPage => prevPage + 1);
   };
 
-  const goToPrevPage = async () => {
+  const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
@@ -154,14 +150,14 @@ export default function Home({ initialPoetryData }) {
 
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
-          
-      <div className="attribution">
+
+          <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-      
+          
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
