@@ -63,7 +63,7 @@ export default function Home({ initialPoetryData }) {
   useEffect(() => {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(prevData => [...prevData, ...data]);
+      setPoetryData(data);
     };
 
     if (currentPage > 0) {
