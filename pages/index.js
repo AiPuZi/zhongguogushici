@@ -62,8 +62,8 @@ export default function Home({ initialPoetryData }) {
 
   useEffect(() => {
     // 加载第一页数据
-    loadPoetryData(currentCategory, currentPage, poemsPerPage);
-  }, [currentCategory, currentPage]); // 仅在 currentCategory 或 currentPage 更新时执行
+    loadPoetryData();
+  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
 
   const loadPoetryData = async () => {
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
@@ -83,7 +83,11 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
+    setCurrentPage(prevPage => {
+      const nextPage = prevPage + 1;
+      loadPoetryData(nextPage); // 加载下一页的数据
+      return nextPage;
+    });
   };
 
   const goToPrevPage = () => {
