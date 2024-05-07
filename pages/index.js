@@ -156,7 +156,12 @@ export default function Home({ initialPoetryData }) {
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
         <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
-      
+
+          <div className="attribution">
+        本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
+        <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
+      </div>
+          
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
