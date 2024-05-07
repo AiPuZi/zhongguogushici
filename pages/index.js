@@ -86,7 +86,7 @@ export default function Home({ initialPoetryData }) {
   const goToNextPage = () => {
     setCurrentPage(prevPage => {
       const nextPage = prevPage + 1;
-      loadPoetryData();
+      loadPoetryData(); // 加载下一页的数据
       return nextPage;
     });
   };
