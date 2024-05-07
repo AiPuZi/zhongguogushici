@@ -83,8 +83,11 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+  const nextPage = currentPage + 1;
+  loadPoetryData(currentCategory, nextPage, poemsPerPage).then(() => {
+    setCurrentPage(nextPage);
+  });
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
