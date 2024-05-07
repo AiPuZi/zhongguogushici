@@ -34,12 +34,21 @@ async function getPoetryData(category, page, perPage) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
+  const responseFirstPage = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const responseSecondPage = await fetch(`${baseUrl}/api/search?category=quantangshi&page=1&perPage=9`);
+  
+  const dataFirstPage = await responseFirstPage.json();
+  const dataSecondPage = await responseSecondPage.json();
+
+  const poetryDataFirstPage = Array.isArray(dataFirstPage) ? dataFirstPage : [];
+  const poetryDataSecondPage = Array.isArray(dataSecondPage) ? dataSecondPage : [];
+
   return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
+      initialPoetryData: [
+        ...poetryDataFirstPage,
+        ...poetryDataSecondPage
+      ].map(poem => ({
         title: poem.title || '',
         author: poem.author || '',
         chapter: poem.chapter || '',
@@ -52,6 +61,7 @@ export async function getStaticProps() {
     revalidate: 10,
   };
 }
+
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
