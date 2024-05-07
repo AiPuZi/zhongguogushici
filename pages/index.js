@@ -60,16 +60,10 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
-  useEffect(() => {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(data);
-    };
-
-    if (currentPage >= 0) {
-      loadPoetryData();
-    }
-  }, [currentCategory, currentPage]);
+  const loadPoetryData = async () => {
+    const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+    setPoetryData(data);
+  };
 
   useEffect(() => {
     // 加载第一页数据
