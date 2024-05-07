@@ -20,7 +20,7 @@ export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
+  const poetryData = Array.isArray(data) ? data.filter(poem => poem.paragraphs && poem.paragraphs.length > 0) : [];
   return {
     props: {
       initialPoetryData: poetryData,
@@ -40,9 +40,8 @@ export default function Home({ initialPoetryData }) {
   useEffect(() => {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      // 进行去重处理
       setPoetryData(prevData => {
-        const newData = data.filter(newPoem => !prevData.some(prevPoem => prevPoem.title === newPoem.title && prevPoem.author === newPoem.author));
+        const newData = data.filter(newPoem => newPoem.content && newPoem.content.length > 0 && !prevData.some(prevPoem => prevPoem.title === newPoem.title && prevPoem.author === newPoem.author));
         return [...prevData, ...newData];
       });
     };
