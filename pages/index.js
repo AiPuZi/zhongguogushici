@@ -40,7 +40,11 @@ export default function Home({ initialPoetryData }) {
   useEffect(() => {
     const loadPoetryData = async () => {
       const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(prevData => [...prevData, ...data]);
+      // 进行去重处理
+      setPoetryData(prevData => {
+        const newData = data.filter(newPoem => !prevData.some(prevPoem => prevPoem.title === newPoem.title && prevPoem.author === newPoem.author));
+        return [...prevData, ...newData];
+      });
     };
 
     loadPoetryData();
