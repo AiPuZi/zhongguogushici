@@ -1,177 +1,96 @@
-import Head from 'next/head';
-import { useState, useEffect } from 'react';
-import Poem from '../components/poem';
+// pages/api/search.js
+import fs from 'fs';
+import path from 'path';
 
-// 用于获取诗词数据的函数
-async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
-  const data = await response.json();
-  return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || item.para || [];
-    if (typeof content === 'string') {
-      content = content.split('\n');
-    } else if (!Array.isArray(content)) {
-      content = [];
-    }
+export default function handler(req, res) {
+  const { query, category, page = 1, perPage = 10 } = req.query;
 
-    const title = item.title || '';
-    const author = item.author || '';
-    const chapter = item.chapter || '';
-    const section = item.section || '';
-    const comments = Array.isArray(item.comment) ? item.comment : [];
+  // 分类查询逻辑
+  if (category) {
+    const poemsPerPage = parseInt(perPage, 10);
+    const currentPage = Math.max(1, parseInt(page, 10));
+    const startIndex = (currentPage - 1) * poemsPerPage;
+    const categoryDirPath = path.join(process.cwd(), 'public', category);
 
-    return {
-      title: title,
-      author: author,
-      chapter: chapter,
-      section: section,
-      content: content,
-      comments: comments,
-      rhythmic: item.rhythmic || '', 
-    };
-  });
-}
+    fs.readdir(categoryDirPath, (err, files) => {
+      if (err) {
+        console.error('Failed to read directory', err);
+        return res.status(500).json({ error: 'Failed to read directory' });
+      }
 
-export async function getStaticProps() {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
-  return {
-    props: {
-      initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || '',
-        author: poem.author || '',
-        chapter: poem.chapter || '',
-        section: poem.section || '',
-        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
-        comments: Array.isArray(poem.comment) ? poem.comment : [],
-        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
-      })),
-    },
-    revalidate: 10,
-  };
-}
+      const validFiles = files.filter(file => file.endsWith('.json'));
+      let allPoems = [];
 
-export default function Home({ initialPoetryData }) {
-  const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [nextPageData, setNextPageData] = useState([]); // 新增状态来存储下一页的数据
-  const [searchInput, setSearchInput] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
+      validFiles.forEach(file => {
+        const filePath = path.join(categoryDirPath, file);
+        try {
+          const fileContents = fs.readFileSync(filePath, 'utf8');
+          const jsonContent = JSON.parse(fileContents);
+          if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
+            console.error(`File ${filePath} does not contain an array or is empty.`);
+            return;
+          }
+          allPoems = allPoems.concat(jsonContent);
+        } catch (error) {
+          console.error(`Error reading or parsing file ${filePath}:`, error);
+          return res.status(500).json({ error: 'Error reading or parsing file' });
+        }
+      });
 
-  useEffect(() => {
-    // 加载第一页数据和下一页数据
-    loadPoetryData();
-  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
+      const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
 
-  const loadPoetryData = async () => {
-    const currentPageData = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-    setPoetryData(currentPageData);
-    
-    // 预加载下一页的数据
-    const nextPage = currentPage + 1;
-    const nextPageData = await getPoetryData(currentCategory, nextPage, poemsPerPage);
-    setNextPageData(nextPageData);
-  };
+      // 检查是否需要加载更多诗词以填满当前页
+      if (paginatedPoems.length < poemsPerPage && allPoems.length < startIndex + poemsPerPage) {
+        // 计算剩余需要加载的诗词数量
+        const remainingPoemsToLoad = poemsPerPage - paginatedPoems.length;
+        // 计算下一个需要加载的文件的数量
+        const filesToLoad = Math.ceil(remainingPoemsToLoad / poemsPerPage);
+        let loadedFiles = 0;
 
-  const handleCategoryChange = async (category, event) => {
-    event.preventDefault();
-    setCurrentCategory(category);
-    setCurrentPage(0); // 切换分类时，返回第一页
-    window.location.hash = category;
-  };
+        // 加载剩余的文件
+        validFiles.forEach(file => {
+          const filePath = path.join(categoryDirPath, file);
+          try {
+            const fileContents = fs.readFileSync(filePath, 'utf8');
+            const jsonContent = JSON.parse(fileContents);
+            if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
+              console.error(`File ${filePath} does not contain an array or is empty.`);
+              return;
+            }
+            allPoems = allPoems.concat(jsonContent);
+            loadedFiles++;
 
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
-  };
+            if (loadedFiles === filesToLoad) {
+              // 获取填满当前页的诗词
+              paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
+              return false; // 终止循环
+            }
+          } catch (error) {
+            console.error(`Error reading or parsing file ${filePath}:`, error);
+            return res.status(500).json({ error: 'Error reading or parsing file' });
+          }
+        });
+      }
 
-  const goToNextPage = async () => {
-  setCurrentPage(prevPage => prevPage + 1);
-  const nextPage = currentPage + 1;
-  const nextPageData = await getPoetryData(currentCategory, nextPage, poemsPerPage);
-  setNextPageData(nextPageData);
-  setPoetryData(nextPageData); // 更新当前页数据为预加载的下一页数据
-};
+      res.status(200).json(paginatedPoems);
+    });
+  } else if (query) {
+    // 处理查询参数的逻辑
+    // 注意：这里的搜索逻辑需要根据实际需求进行实现，以下是一个简单的示例
+    const examplePoems = [
+      { title: "静夜思", author: "李白", content: "床前明月光，疑是地上霜。举头望明月，低头思故乡。" },
+      // 更多示例诗词数据...
+    ];
 
+    const filteredPoems = examplePoems.filter(poem =>
+      poem.title.includes(query) ||
+      poem.author.includes(query) ||
+      poem.content.includes(query)
+    );
 
-  const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-  };
-
-  return (
-    <>
-      <Head>
-        <title>古诗词网</title>
-        <link rel="icon" href="/logo.png" />
-      </Head>
-
-      <header>
-        <div className="logo">
-          <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>古诗词</a>
-        </div>
-        <div className="slogan">莫愁前路无知己，天下谁人不识君。</div>
-        <div className="search-container">
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="搜索标题、作者、内容..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          <button id="searchButton" onClick={handleSearch}>搜索</button>
-        </div>
-      </header>
-              
-      <nav className="poetry-navigation">
-       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
-        <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
-        <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
-        <a href="#quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
-        <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
-        <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
-        <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
-        <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
-        <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
-        <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
-        <a href="#mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
-        <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
-        <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
-      </nav>
-      
- <main id="poetry-content">
-        {poetryData.map((poem, index) => (
-          <div key={index} className="poem">
-            <Poem
-              title={poem.title}
-              author={poem.author}
-              content={poem.content}
-              chapter={poem.chapter}
-              section={poem.section}
-              comments={poem.comments}
-              rhythmic={poem.rhythmic}
-            />
-          </div>
-        ))}
-      </main>
-
-      <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
-      </div>
-
-          <div className="attribution">
-        本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
-        <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
-      </div>
-          
-      <footer>
-        <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
-      </footer>
-    </>
-  );
+    res.status(200).json(filteredPoems);
+  } else {
+    // 如果没有提供分类或查询参数，返回错误响应
+    res.status(400).json({ error: 'Missing category or query parameter' });
+  }
 }
