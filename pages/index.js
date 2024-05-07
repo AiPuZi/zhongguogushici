@@ -60,12 +60,20 @@ export default function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
 
+  useEffect(() => {
+    // 加载第一页数据
+    loadPoetryData();
+  }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
+
+  const loadPoetryData = async () => {
+    const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+    setPoetryData(data);
+  };
+
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    const data = await getPoetryData(category, 0, poemsPerPage);
-    setPoetryData(data);
     window.location.hash = category;
   };
 
@@ -75,17 +83,15 @@ export default function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    const nextPage = currentPage + 1;
-    const data = await getPoetryData(currentCategory, nextPage, poemsPerPage);
-    setPoetryData(data);
-    setCurrentPage(nextPage);
+    setCurrentPage(prevPage => {
+      const nextPage = prevPage + 1;
+      loadPoetryData(nextPage); // 加载下一页的数据
+      return nextPage;
+    });
   };
 
   const goToPrevPage = async () => {
-    const prevPage = currentPage > 0 ? currentPage - 1 : 0;
-    const data = await getPoetryData(currentCategory, prevPage, poemsPerPage);
-    setPoetryData(data);
-    setCurrentPage(prevPage);
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
@@ -130,7 +136,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-      <main id="poetry-content">
+ <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
