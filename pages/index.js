@@ -58,6 +58,7 @@ export default function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [nextPageData, setNextPageData] = useState(null); // 用于存储下一页的数据
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
@@ -68,6 +69,15 @@ export default function Home({ initialPoetryData }) {
   const loadPoetryData = async () => {
     const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
     setPoetryData(data);
+
+    // 异步请求预加载下一页的数据
+    preloadNextPage();
+  };
+
+  const preloadNextPage = async () => {
+    const nextPage = currentPage + 1;
+    const data = await getPoetryData(currentCategory, nextPage, poemsPerPage);
+    setNextPageData(data);
   };
 
   const handleCategoryChange = async (category, event) => {
@@ -84,6 +94,11 @@ export default function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
+    if (nextPageData) {
+      // 如果下一页的数据已经预加载完成，则直接显示
+      setPoetryData(nextPageData);
+      preloadNextPage(); // 预加载下一页的数据
+    }
   };
 
   const goToPrevPage = () => {
