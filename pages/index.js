@@ -85,13 +85,17 @@ export default function Home({ initialPoetryData }) {
     window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
   };
 
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+ const goToNextPage = () => {
+  setCurrentPage(prevPage => {
+    const nextPage = prevPage + 1;
+    loadPoetryData(nextPage);
+    return nextPage;
+  });
+};
 
-  const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-  };
+const goToPrevPage = () => {
+  setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+};
 
   useEffect(() => {
     loadPoetryData(currentPage);
