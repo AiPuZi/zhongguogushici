@@ -54,19 +54,6 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-  const fetchDataAndSetPoetryData = async () => {
-    let keyword = '';
-    if (router.query.query) {
-      keyword = decodeURIComponent(router.query.query);
-    }
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-    setPoetryData(data);
-  };
-  fetchDataAndSetPoetryData();
-}, [currentCategory, currentPage, poemsPerPage, router.query]);
-
-// 修改当前页码和下一页数据的更新逻辑
-useEffect(() => {
   const fetchNextPageData = async () => {
     if (nextPageData) {
       setPoetryData(prevData => [...prevData, ...nextPageData]); // 更新当前页数据
@@ -74,7 +61,18 @@ useEffect(() => {
     }
   };
   fetchNextPageData();
-}, [nextPageData]);
+}, [nextPageData, setPoetryData]);
+
+useEffect(() => {
+  const prefetchNextPageData = async () => {
+    const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+    if (currentPage + 1 < totalPages) { // 检查下一页是否已加载
+      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+      setNextPageData(data);
+    }
+  };
+  prefetchNextPageData();
+}, [currentCategory, currentPage, poetryData, poemsPerPage, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -92,9 +90,13 @@ useEffect(() => {
   };
 
   const goToNextPage = async () => {
+  if (isLoadingMore) { // 防止连续多次点击
+    return;
+  }
   setCurrentPage(prevPage => prevPage + 1);
   setIsLoadingMore(true); // 设置加载更多状态
 };
+
 
 const goToPrevPage = async () => {
   setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
