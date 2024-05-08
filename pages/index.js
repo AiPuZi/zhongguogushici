@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
@@ -49,10 +50,9 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [canLoadMore, setCanLoadMore] = useState(true); // 新增状态，用于判断是否还可以加载更多数据
+  const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页的数据
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
-  const [nextPageData, setNextPageData] = useState([]); // 存储下一页数据
 
   useEffect(() => {
     const fetchDataAndSetPoetryData = async () => {
@@ -68,13 +68,13 @@ function Home({ initialPoetryData }) {
 
   useEffect(() => {
     const prefetchNextPageData = async () => {
-      if (canLoadMore) {
-        const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-        setNextPageData(data);
-      }
+      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+      setNextPageData(data);
     };
-    prefetchNextPageData();
-  }, [currentCategory, currentPage, canLoadMore, searchKeyword]);
+    if (!nextPageData && currentPage < Math.ceil(poetryData.length / poemsPerPage) - 1) {
+      prefetchNextPageData();
+    }
+  }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -82,7 +82,6 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     setPoetryData([]);
     setSearchKeyword('');
-    setCanLoadMore(true);
   };
 
   const handleSearch = async (event) => {
@@ -90,21 +89,17 @@ function Home({ initialPoetryData }) {
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); // Reset to page 0 on search
     setPoetryData(data);
     setCurrentPage(0);
-    setCanLoadMore(true);
   };
 
   const goToNextPage = async () => {
-  setIsLoadingMore(true);
-  try {
-    const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-    setPoetryData([...poetryData, ...data]);
-    setCurrentPage(prevPage => prevPage + 1);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsLoadingMore(false);
-  }
-};
+    if (nextPageData) {
+      setPoetryData(nextPageData);
+      setNextPageData(null);
+      setCurrentPage(prevPage => prevPage + 1);
+    } else {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  };
 
   const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
@@ -133,7 +128,7 @@ function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-
+              
       <nav className="poetry-navigation">
         <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
