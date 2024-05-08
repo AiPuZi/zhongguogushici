@@ -3,8 +3,13 @@ import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
 // 用于获取诗词数据的函数
+import getConfig from 'next/config';
+
+const { publicRuntimeConfig } = getConfig();
+const { API_BASE_URL } = publicRuntimeConfig;
+
 async function fetchPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const response = await fetch(`${API_BASE_URL}/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []);
 }
