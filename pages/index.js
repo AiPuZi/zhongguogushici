@@ -41,7 +41,7 @@ export async function getStaticProps() {
 function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [poetryData, setPoetryData] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9;
@@ -55,8 +55,12 @@ function Home({ initialPoetryData }) {
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       setPoetryData(data);
     };
-    fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query]);
+    if (initialPoetryData.length === 0) {
+      fetchDataAndSetPoetryData();
+    } else {
+      setPoetryData(initialPoetryData);
+    }
+  }, [currentCategory, currentPage, poemsPerPage, router.query, initialPoetryData]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
