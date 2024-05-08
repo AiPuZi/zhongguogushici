@@ -58,6 +58,21 @@ export async function getStaticProps() {
   };
 }
 
+// 在Home组件定义之前添加searchPoems函数
+async function searchPoems(keyword) {
+  try {
+    const response = await fetch(`/api/search?query=${encodeURIComponent(keyword)}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return [];
+  }
+}
+
 function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
