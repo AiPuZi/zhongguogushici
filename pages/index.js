@@ -94,27 +94,9 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
   };
 
-  const goToNextPage = async () => {
-  if (nextPageData) {
-    setPoetryData(nextPageData);
-    setNextPageData(null);
+  const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
-    prefetchNextPageData(); // 立即预加载下一页数据
-  } else {
-    setIsLoadingMore(true);
-    try {
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-      setPoetryData([...poetryData, ...data]);
-      setCurrentPage(prevPage => prevPage + 1);
-      prefetchNextPageData(); // 立即预加载下一页数据
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }
-};
-
+  };
 
   const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
