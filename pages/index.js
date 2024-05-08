@@ -118,7 +118,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
- <main id="poetry-content">
+      <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
@@ -139,7 +139,7 @@ export default function Home({ initialPoetryData }) {
         <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
-          <div className="attribution">
+      <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
