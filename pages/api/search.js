@@ -56,11 +56,11 @@ function poemsPushIfMatched(item, keyword) {
       const value = item[key];
 
       if (isStringMatch(value, keyword) || isArrayMatch(value, keyword)) {
-        return true; // 返回true表示找到了匹配项
+        return item; // 返回整个匹配的诗词对象
       }
     }
   }
-  return false; // 没有找到匹配项
+  return null; // 没有找到匹配项，返回null
 }
 
 function isStringMatch(value, keyword) {
