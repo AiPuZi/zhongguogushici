@@ -62,11 +62,11 @@ export default function Home({ initialPoetryData }) {
   }, [currentCategory, currentPage]); // 移除 forceUpdate 作为依赖项
 
   const handleCategoryChange = (category, event) => {
-    event.preventDefault();
-    setCurrentCategory(category);
-    setCurrentPage(0);
-    window.location.hash = category;
-  };
+  event.preventDefault();
+  setCurrentCategory(category);
+  setCurrentPage(0);
+  setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
+};
 
   const handleSearch = async (event) => {
     event.preventDefault();
