@@ -7,46 +7,66 @@ export default async function handler(req, res) {
   if (query) {
     const poems = await searchPoems(query);
     res.status(200).json(poems);
+    return; // 结束响应
   } else {
     res.status(400).json({ error: 'Missing query parameter' });
+    return; // 结束响应
   }
 }
 
-// 搜索诗词的函数
-async function searchPoems(keyword) {
+const searchPoems = async (keyword) => {
   const categories = await readdir(path.join(process.cwd(), 'public'));
 
   const poems = [];
+
   for (const category of categories) {
     const categoryDirPath = path.join(process.cwd(), 'public', category);
+    const files = await readdir(categoryDirPath);
+    const validFiles = files.filter(file => file.endsWith('.json'));
 
-    try {
-      const files = await readdir(categoryDirPath);
-      const validFiles = files.filter(file => file.endsWith('.json'));
+    for (const file of validFiles) {
+      const filePath = path.join(categoryDirPath, file);
+      const fileContent = await readFile(filePath, 'utf8');
+      const jsonContent = JSON.parse(fileContent);
 
-      for (const file of validFiles) {
-        const filePath = path.join(categoryDirPath, file);
-        const fileContents = await readFile(filePath, 'utf8');
-        const jsonContent = JSON.parse(fileContents);
+      if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
+        console.error(`File ${filePath} does not contain an array or is empty.`);
+        continue;
+      }
 
-        if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
-          console.error(`File ${filePath} does not contain an array or is empty.`);
-          continue;
-        }
-
-        for (const poem of jsonContent) {
-          if (
-            poem.title.toLowerCase().includes(keyword.toLowerCase()) ||
-            (poem.author && poem.author.toLowerCase().includes(keyword.toLowerCase()))
-          ) {
-            poems.push(poem);
+      const batchSize = 1000; // 每批处理的诗词数目
+      for (let i = 0; i < jsonContent.length; i += batchSize) {
+        const batch = jsonContent.slice(i, i + batchSize);
+        for (const item of batch) {
+          if (poemsPushIfMatched(item, keyword)) {
+            // 如果找到匹配项，直接推送到结果数组中，无需break
+            poems.push(item);
           }
         }
       }
-    } catch (error) {
-      console.error('Failed to read directory or parse files:', error);
     }
   }
 
   return poems;
+};
+
+function poemsPushIfMatched(item, keyword) {
+  for (const key in item) {
+    if (Object.prototype.hasOwnProperty.call(item, key)) {
+      const value = item[key];
+
+      if (isStringMatch(value, keyword) || isArrayMatch(value, keyword)) {
+        return true; // 返回true表示找到了匹配项
+      }
+    }
+  }
+  return false; // 没有找到匹配项
+}
+
+function isStringMatch(value, keyword) {
+  return typeof value === 'string' && value.toLowerCase().includes(keyword.toLowerCase());
+}
+
+function isArrayMatch(value, keyword) {
+  return Array.isArray(value) && value.some(line => isStringMatch(line, keyword));
 }
