@@ -107,21 +107,33 @@ function Home({ initialPoetryData }) {
   };
 
   const handleNextPage = async () => {
-    if (currentPage + 1 < pageList.length) {
-      setCurrentPage(currentPage + 1);
-    } else {
-      const nextPage = currentPage + 1;
+  if (isLoadingMore) return;
+
+  setIsLoadingMore(true);
+
+  const nextPage = currentPage + 1;
+  const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+
+  // 首先检查是否有预加载的下一页数据
+  if (nextPage < pageList.length) {
+    setCurrentPage(nextPage);
+    setIsLoadingMore(false);
+    return;
+  }
+
+  // 如果没有预加载数据，则请求新的数据
+  if (nextPage <= totalPages) {
+    try {
       const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
-
-      // 添加新分页到pageList，并移除最旧的分页
-      setPageList((prevList) => [
-        ...prevList.slice(-maxCachedPages + 1),
-        data,
-      ]);
-
+      setPageList([...pageList, data]); // 添加新数据到缓存列表末尾
       setCurrentPage(nextPage);
+    } catch (error) {
+      console.error("Error fetching next page:", error);
+    } finally {
+      setIsLoadingMore(false);
     }
-  };
+  }
+};
 
   const handlePreviousPage = () => {
     setCurrentPage(Math.max(currentPage - 1, 0));
