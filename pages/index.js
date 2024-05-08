@@ -26,7 +26,7 @@ async function fetchData(category, page, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
+  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=1`);
   const data = await response.json();
 
   // 更新这里的初始数据处理
@@ -49,6 +49,7 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [nextPageData, setNextPageData] = useState([]);
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -62,6 +63,17 @@ function Home({ initialPoetryData }) {
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
+
+  // 预加载下一页数据
+  useEffect(() => {
+    const fetchNextPageData = async () => {
+      if (currentPage > 0) {
+        const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+        setNextPageData(data);
+      }
+    };
+    fetchNextPageData();
+  }, [currentCategory, currentPage, poemsPerPage, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -79,6 +91,9 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
+    // 切换页面时更新预加载的数据
+    setPoetryData(nextPageData);
+    setNextPageData([]);
   };
 
   const goToPrevPage = () => {
@@ -146,7 +161,7 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
       </div>
 
       <div className="attribution">
