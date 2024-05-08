@@ -96,23 +96,19 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = async () => {
   if (nextPageData) {
-    setPoetryData(nextPageData);
-    setNextPageData(null);
+    // 使用预加载的数据
+    setPoetryData([...poetryData, ...nextPageData]);
+    setNextPageData(null); // 清空预加载数据状态
     setCurrentPage(prevPage => prevPage + 1);
 
-    // 立即预加载下一页数据
-    prefetchNextPageData();
-  } else {
-    setIsLoadingMore(true);
-    try {
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-      setPoetryData([...poetryData, ...data]);
-      setCurrentPage(prevPage => prevPage + 1);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingMore(false);
+    // 预加载下一页数据
+    const nextPage = currentPage + 2; // 因为当前页即将变为下一页，所以预加载下下页
+    if (nextPage < totalPages) {
+      const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+      setNextPageData(data);
     }
+  } else {
+    console.log("没有更多的预加载数据");
   }
 };
 
