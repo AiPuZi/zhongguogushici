@@ -3,23 +3,41 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category) {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1`);
+async function fetchData(category, page, perPage, keyword) {
+  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+  if (keyword) {
+    url = `/api/search?query=${encodeURIComponent(keyword)}`;
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
   const data = await response.json();
-  return Array.isArray(data) && data.length > 0 ? data[0] : null; // Take the first poem from each category
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 export async function getStaticProps() {
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const initialPoetryData = await Promise.all(categories.map(async (category) => ({
-    category: category,
-    poetry: await fetchData(category),
-  })));
+  const baseUrl = process.env.API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
+
+  // 更新这里的初始数据处理
+  const poetryData = Array.isArray(data) ? data.map(item => ({
+    ...item,
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+  })) : [];
 
   return {
     props: {
-      initialPoetryData: initialPoetryData.filter(item => item.poetry !== null), // Filter out categories with no data
+      initialPoetryData: poetryData,
     },
     revalidate: 10,
   };
@@ -27,6 +45,7 @@ export async function getStaticProps() {
 
 function Home({ initialPoetryData }) {
   const router = useRouter();
+  const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -38,15 +57,23 @@ function Home({ initialPoetryData }) {
       if (router.query.query) {
         keyword = decodeURIComponent(router.query.query);
       }
-      const data = await fetchData(currentPage, poemsPerPage, keyword);
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       setPoetryData(data);
     };
     fetchDataAndSetPoetryData();
-  }, [currentPage, poemsPerPage, router.query]);
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
+
+  const handleCategoryChange = (category, event) => {
+    event.preventDefault();
+    setCurrentCategory(category);
+    setCurrentPage(0);
+    setPoetryData([]);
+    setSearchKeyword('');
+  };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
   };
 
@@ -81,9 +108,9 @@ function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-              
+
       <nav className="poetry-navigation">
-        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
@@ -99,24 +126,22 @@ function Home({ initialPoetryData }) {
         <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
-
-      {/* Display poetry for each category */}
-      {poetryData.map((categoryData, index) => (
-        <section key={index} id={categoryData.category}>
-          <h2>{categoryData.category}</h2>
-          <div className="poetry-container">
-            <Poem
-              title={categoryData.poetry.title}
-              author={categoryData.poetry.author}
-              content={categoryData.poetry.content}
-              chapter={categoryData.poetry.chapter}
-              section={categoryData.poetry.section}
-              comments={categoryData.poetry.comments}
-              rhythmic={categoryData.poetry.rhythmic}
-            />
-          </div>
-        </section>
-      ))}
+      
+<main id="poetry-content">
+  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content}
+        chapter={poem.chapter}
+        section={poem.section}
+        comments={poem.comments}
+        rhythmic={poem.rhythmic}
+      />
+    </div>
+  ))}
+</main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
@@ -128,7 +153,7 @@ function Home({ initialPoetryData }) {
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-
+      
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
