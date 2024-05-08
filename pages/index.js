@@ -64,8 +64,7 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9; // 每页显示的诗词数量
-  const [forceUpdate, setForceUpdate] = useState(false);
+  const poemsPerPage = 9;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,26 +84,25 @@ function Home({ initialPoetryData }) {
     };
 
     fetchData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query, forceUpdate]);
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    setForceUpdate(f => !f);
-    router.push(`/?category=${category}`);
-    // 清空搜索关键词
+    setPoetryData([]);
     setSearchKeyword('');
   };
 
-  const handleSearch = (event) => {
+  const handleSearch = async (event) => {
     event.preventDefault();
     const keyword = event.target.value.trim();
+    setSearchKeyword(keyword);
+
     if (keyword) {
-      // 当前实现仍跳转到搜索结果页面，若要避免跳转，请注释掉以下两行
-      router.push(`/search?query=${encodeURIComponent(keyword)}`);
+      const data = await searchPoems(keyword);
+      setPoetryData(data);
     } else {
-      // 当搜索框为空时，恢复初始数据
       setPoetryData(initialPoetryData);
     }
   };
