@@ -52,6 +52,7 @@ function Home({ initialPoetryData }) {
   const [canLoadMore, setCanLoadMore] = useState(true); // 新增状态，用于判断是否还可以加载更多数据
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
+  const [nextPageData, setNextPageData] = useState([]); // 存储下一页数据
 
   useEffect(() => {
     const fetchDataAndSetPoetryData = async () => {
@@ -64,6 +65,16 @@ function Home({ initialPoetryData }) {
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
+
+  useEffect(() => {
+    const prefetchNextPageData = async () => {
+      if (canLoadMore) {
+        const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+        setNextPageData(data);
+      }
+    };
+    prefetchNextPageData();
+  }, [currentCategory, currentPage, canLoadMore, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -83,7 +94,12 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    setCurrentPage(prevPage => prevPage + 1);
+    if (nextPageData.length > 0) {
+      setPoetryData(nextPageData);
+      setCurrentPage(prevPage => prevPage + 1);
+    } else {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
   };
 
   const goToPrevPage = async () => {
@@ -115,7 +131,7 @@ function Home({ initialPoetryData }) {
       </header>
 
       <nav className="poetry-navigation">
-       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
@@ -132,21 +148,21 @@ function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-<main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
+      <main id="poetry-content">
+        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+          <div key={index} className="poem">
+            <Poem
+              title={poem.title}
+              author={poem.author}
+              content={poem.content}
+              chapter={poem.chapter}
+              section={poem.section}
+              comments={poem.comments}
+              rhythmic={poem.rhythmic}
+            />
+          </div>
+        ))}
+      </main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
