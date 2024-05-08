@@ -4,11 +4,11 @@ import path from 'path';
 export default async function handler(req, res) {
   const { query } = req.query;
 
-  if (keyword) {
-    const poems = await searchPoems(keyword);
+  if (query) {
+    const poems = await searchPoems(query);
     res.status(200).json(poems);
   } else {
-    res.status(400).json({ error: 'Missing keyword parameter' });
+    res.status(400).json({ error: 'Missing query parameter' });
   }
 }
 
