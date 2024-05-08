@@ -94,13 +94,17 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    if (nextPageData.length > 0) {
-      setPoetryData(nextPageData);
-      setCurrentPage(prevPage => prevPage + 1);
-    } else {
-      setCurrentPage(prevPage => prevPage + 1);
-    }
-  };
+  setIsLoadingMore(true);
+  try {
+    const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+    setPoetryData([...poetryData, ...data]);
+    setCurrentPage(prevPage => prevPage + 1);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsLoadingMore(false);
+  }
+};
 
   const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
