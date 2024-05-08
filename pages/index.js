@@ -63,7 +63,7 @@ function Home({ initialPoetryData }) {
       if (currentPage === 0) {
         setPoetryData(data);
       } else {
-        setPoetryData(prevData => [...prevData, ...data]);
+        setPoetryData(data);
       }
     };
     fetchDataAndSetPoetryData();
