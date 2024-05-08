@@ -60,11 +60,7 @@ function Home({ initialPoetryData }) {
         keyword = decodeURIComponent(router.query.query);
       }
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      if (currentPage === 0) {
-        setPoetryData(data);
-      } else {
-        setPoetryData(prevData => [...prevData, ...data]);
-      }
+      setPoetryData(data);
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
