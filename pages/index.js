@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
@@ -68,10 +67,14 @@ function Home({ initialPoetryData }) {
 
   useEffect(() => {
     const prefetchNextPageData = async () => {
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-      setNextPageData(data);
+      const nextPage = currentPage + 1;
+      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+      if (nextPage <= totalPages) {
+        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+        setNextPageData(data);
+      }
     };
-    if (!nextPageData && currentPage < Math.ceil(poetryData.length / poemsPerPage) - 1) {
+    if (!nextPageData) {
       prefetchNextPageData();
     }
   }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword]);
