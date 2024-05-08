@@ -26,22 +26,23 @@ async function fetchData(category, page, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
+  // Load the first page of data for each category
   const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const poetryData = [];
-
-  for (const category of categories) {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1000`); // 加载第一个 JSON 文件上的所有诗词数据
+  const initialPoetryData = await Promise.all(categories.map(async (category) => {
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1`);
     const data = await response.json();
-    const formattedData = Array.isArray(data) ? data.map(item => ({
-      ...item,
-      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    })) : [];
-    poetryData.push(formattedData);
-  }
+    return Array.isArray(data) && data.length > 0 ? ({
+      category: category,
+      poetry: data.map(item => ({
+        ...item,
+        content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+      }))[0] // Only take the first poem for each category
+    }) : null;
+  }));
 
   return {
     props: {
-      initialPoetryData: poetryData.flat(), // 将多个分类的数据合并成一个数组
+      initialPoetryData: initialPoetryData.filter(item => item !== null), // Filter out null items
     },
     revalidate: 10,
   };
@@ -53,7 +54,6 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState([]);
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -67,17 +67,6 @@ function Home({ initialPoetryData }) {
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
-
-  // 预加载下一页数据
-  useEffect(() => {
-    const fetchNextPageData = async () => {
-      if (currentPage > 0) {
-        const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-        setNextPageData(data);
-      }
-    };
-    fetchNextPageData();
-  }, [currentCategory, currentPage, poemsPerPage, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -95,9 +84,6 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
-    // 切换页面时更新预加载的数据
-    setPoetryData(nextPageData);
-    setNextPageData([]);
   };
 
   const goToPrevPage = () => {
@@ -129,7 +115,7 @@ function Home({ initialPoetryData }) {
       </header>
 
       <nav className="poetry-navigation">
-       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
@@ -145,34 +131,36 @@ function Home({ initialPoetryData }) {
         <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
-      
-<main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
+
+      {/* Display poetry for each category */}
+      {poetryData.map((categoryData, index) => (
+        <section key={index} id={categoryData.category}>
+          <h2>{categoryData.category}</h2>
+          <div className="poetry-container">
+            <Poem
+              title={categoryData.poetry.title}
+              author={categoryData.poetry.author}
+              content={categoryData.poetry.content}
+              chapter={categoryData.poetry.chapter}
+              section={categoryData.poetry.section}
+              comments={categoryData.poetry.comments}
+              rhythmic={categoryData.poetry.rhythmic}
+            />
+          </div>
+        </section>
+      ))}
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-      
+
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
