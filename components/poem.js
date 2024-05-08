@@ -4,7 +4,7 @@ export default function Poem({ title, author, content, chapter, section, comment
     <p key={index}>{comment}</p>
   ));
 
-// 如果 content 是一个数组，则将其连接为一个字符串
+// 如果 content 是一个数组，则将其连接为一个字符串。（搜索结果中只显示标题和作者不能显示内容，就加了这段代码）
   if (Array.isArray(content)) {
     content = content.join('\n');
   }
