@@ -63,29 +63,11 @@ function Home({ initialPoetryData }) {
       if (currentPage === 0) {
         setPoetryData(data);
       } else {
-        setPoetryData(data);
+        setPoetryData(prevData => [...prevData, ...data]);
       }
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
-
-  // 添加滚动监听以实现懒加载
-  useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
-      const body = document.body;
-      const html = document.documentElement;
-      const docHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-      const windowBottom = windowHeight + window.pageYOffset;
-      if (windowBottom >= docHeight - 50 && !isLoadingMore && canLoadMore) {
-        setIsLoadingMore(true);
-        goToNextPage().then(() => setIsLoadingMore(false));
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isLoadingMore, canLoadMore]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -98,7 +80,7 @@ function Home({ initialPoetryData }) {
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); // Reset to page 0 on search
     setPoetryData(data);
     setCurrentPage(0);
     setCanLoadMore(true);
