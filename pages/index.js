@@ -3,23 +3,51 @@ import { useState, useEffect } from 'react';
 import Poem from '../components/poem';
 
 // 用于获取诗词数据的函数
-async function getFirstPoetryData(category) {
-  const response = await fetch(`/api/first-poem?category=${category}`);
+async function getPoetryData(category, page, perPage) {
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
-  return data;
+  return (Array.isArray(data) ? data : []).map(item => {
+    let content = item.paragraphs || item.content || item.para || [];
+    if (typeof content === 'string') {
+      content = content.split('\n');
+    } else if (!Array.isArray(content)) {
+      content = [];
+    }
+
+    const title = item.title || '';
+    const author = item.author || '';
+    const chapter = item.chapter || '';
+    const section = item.section || '';
+    const comments = Array.isArray(item.comment) ? item.comment : [];
+
+    return {
+      title: title,
+      author: author,
+      chapter: chapter,
+      section: section,
+      content: content,
+      comments: comments,
+      rhythmic: item.rhythmic || '', 
+    };
+  });
 }
 
 export async function getStaticProps() {
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const poetryData = {};
-
-  for (const category of categories) {
-    poetryData[category] = await getFirstPoetryData(category);
-  }
-
+  const baseUrl = process.env.API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
+  const poetryData = Array.isArray(data) ? data : [];
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: poetryData.map(poem => ({
+        title: poem.title || '',
+        author: poem.author || '',
+        chapter: poem.chapter || '',
+        section: poem.section || '',
+        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
+        comments: Array.isArray(poem.comment) ? poem.comment : [],
+        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
+      })),
     },
     revalidate: 10,
   };
@@ -27,10 +55,9 @@ export async function getStaticProps() {
 
 export default function Home({ initialPoetryData }) {
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData[currentCategory] || []);
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState(null); // 用于存储下一页的数据
   const poemsPerPage = 9; // 每页显示的诗词数量
 
   useEffect(() => {
@@ -39,17 +66,8 @@ export default function Home({ initialPoetryData }) {
   }, [currentCategory, currentPage]); // 当 currentCategory 或 currentPage 更新时执行
 
   const loadPoetryData = async () => {
-    const data = await getFirstPoetryData(currentCategory);
+    const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
     setPoetryData(data);
-
-    // 异步请求预加载下一页的数据
-    preloadNextPage();
-  };
-
-  const preloadNextPage = async () => {
-    const nextPage = currentPage + 1;
-    const data = await getFirstPoetryData(currentCategory);
-    setNextPageData(data);
   };
 
   const handleCategoryChange = async (category, event) => {
@@ -66,10 +84,6 @@ export default function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
-    if (nextPageData) {
-      // 如果下一页的数据已经预加载完成，则直接显示
-      setPoetryData(nextPageData);
-    }
   };
 
   const goToPrevPage = () => {
@@ -118,7 +132,7 @@ export default function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-      <main id="poetry-content">
+ <main id="poetry-content">
         {poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
@@ -139,7 +153,7 @@ export default function Home({ initialPoetryData }) {
         <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
-      <div className="attribution">
+          <div className="attribution">
         本站数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
