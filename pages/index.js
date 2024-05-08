@@ -4,7 +4,7 @@ import Poem from '../components/poem';
 
 // 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=9`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
     let content = item.paragraphs || item.content || item.para || [];
@@ -20,7 +20,7 @@ async function getPoetryData(category, page, perPage) {
     const section = item.section || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
-  return {
+    return {
       title: item.title || '',
       author: item.author || '',
       chapter: item.chapter || '',
