@@ -81,7 +81,7 @@ function Home({ initialPoetryData }) {
   setCurrentPage(prevPage => prevPage + 1);
 
   try {
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
     setPoetryData(data);
   } catch (error) {
     console.error("Error fetching data:", error);
