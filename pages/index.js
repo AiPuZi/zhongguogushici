@@ -28,7 +28,12 @@ export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
-  const poetryData = Array.isArray(data) ? data : [];
+
+  // 更新这里的初始数据处理
+  const poetryData = Array.isArray(data) ? data.map(item => ({
+    ...item,
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+  })) : [];
 
   return {
     props: {
@@ -41,7 +46,7 @@ export async function getStaticProps() {
 function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState([]);
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9;
@@ -55,12 +60,8 @@ function Home({ initialPoetryData }) {
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       setPoetryData(data);
     };
-    if (initialPoetryData.length === 0) {
-      fetchDataAndSetPoetryData();
-    } else {
-      setPoetryData(initialPoetryData);
-    }
-  }, [currentCategory, currentPage, poemsPerPage, router.query, initialPoetryData]);
+    fetchDataAndSetPoetryData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
