@@ -2,7 +2,7 @@ import { readdir, readFile } from 'fs/promises';
 import path from 'path';
 
 export default async function handler(req, res) {
-  const { keyword } = req.query;
+  const { query } = req.query;
 
   if (keyword) {
     const poems = await searchPoems(keyword);
