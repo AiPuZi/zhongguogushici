@@ -63,9 +63,7 @@ export default function Home({ initialPoetryData }) {
   const handleCategoryChange = (category, event) => {
   event.preventDefault();
   setCurrentCategory(category);
-  setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
 };
-
 
   const handleSearch = async (event) => {
     event.preventDefault();
