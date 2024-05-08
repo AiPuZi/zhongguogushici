@@ -1,39 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function getPoetryData(category, page, perPage) {
-  const response = await fetch(`/api/poems?category=${category}&page=${page}&perPage=${perPage}`);
-
+async function fetchData(category, page, perPage, keyword) {
+  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+  if (keyword) {
+    url = `/api/search?query=${encodeURIComponent(keyword)}`;
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
   const data = await response.json();
-
-  return (Array.isArray(data) ? data : []).map(item => {
-    let content = item.paragraphs || item.content || item.para || [];
-
-    if (typeof content === 'string') {
-      content = content.split('\n');
-    } else if (!Array.isArray(content)) {
-      content = [];
-    }
-
-    const title = item.title || '';
-    const author = item.author || '';
-    const chapter = item.chapter || '';
-    const section = item.section || '';
-    const comments = Array.isArray(item.comment) ? item.comment : [];
-
-    return {
-      title,
-      author,
-      chapter,
-      section,
-      content,
-      comments,
-      rhythmic: item.rhythmic || '',
-    };
-  });
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 export async function getStaticProps() {
@@ -44,33 +32,10 @@ export async function getStaticProps() {
 
   return {
     props: {
-      initialPoetryData: poetryData.map(poem => ({
-        title: poem.title || '',
-        author: poem.author || '',
-        chapter: poem.chapter || '',
-        section: poem.section || '',
-        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
-        comments: Array.isArray(poem.comment) ? poem.comment : [],
-        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
-      })),
+      initialPoetryData: poetryData,
     },
     revalidate: 10,
   };
-}
-
-// 在Home组件定义之前添加searchPoems函数
-async function searchPoems(keyword) {
-  try {
-    const response = await fetch(`/api/search?query=${encodeURIComponent(keyword)}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    return [];
-  }
 }
 
 function Home({ initialPoetryData }) {
@@ -82,23 +47,15 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataAndSetPoetryData = async () => {
       let keyword = '';
-
       if (router.query.query) {
         keyword = decodeURIComponent(router.query.query);
       }
-
-      if (keyword) {
-        const data = await searchPoems(keyword);
-        setPoetryData(data);
-      } else {
-        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-        setPoetryData(data);
-      }
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      setPoetryData(data);
     };
-
-    fetchData();
+    fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
@@ -110,15 +67,10 @@ function Home({ initialPoetryData }) {
   };
 
   const handleSearch = async (event) => {
-  event.preventDefault();
-
-  if (searchKeyword) {
-    const data = await searchPoems(searchKeyword); // 使用searchKeyword状态
+    event.preventDefault();
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
-  } else {
-    setPoetryData(initialPoetryData);
-  }
-};
+  };
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
