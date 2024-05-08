@@ -54,30 +54,27 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    const fetchDataAndSetPoetryData = async () => {
-      let keyword = '';
-      if (router.query.query) {
-        keyword = decodeURIComponent(router.query.query);
-      }
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      setPoetryData(data);
-    };
-    fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query]);
-
-  useEffect(() => {
-    const prefetchNextPageData = async () => {
-      const nextPage = currentPage + 1;
-      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-      if (nextPage <= totalPages) {
-        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
-        setNextPageData(data);
-      }
-    };
-    if (!nextPageData) {
-      prefetchNextPageData();
+  const fetchDataAndSetPoetryData = async () => {
+    let keyword = '';
+    if (router.query.query) {
+      keyword = decodeURIComponent(router.query.query);
     }
-  }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword]);
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    setPoetryData(data);
+  };
+  fetchDataAndSetPoetryData();
+}, [currentCategory, currentPage, poemsPerPage, router.query]);
+
+// 修改当前页码和下一页数据的更新逻辑
+useEffect(() => {
+  const fetchNextPageData = async () => {
+    if (nextPageData) {
+      setPoetryData(prevData => [...prevData, ...nextPageData]); // 更新当前页数据
+      setNextPageData(null); // 重置下一页数据为null
+    }
+  };
+  fetchNextPageData();
+}, [nextPageData]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -94,13 +91,16 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
   };
 
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+  const goToNextPage = async () => {
+  setCurrentPage(prevPage => prevPage + 1);
+  setIsLoadingMore(true); // 设置加载更多状态
+};
 
-  const goToPrevPage = async () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-  };
+const goToPrevPage = async () => {
+  setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+  setNextPageData(null); // 重置下一页数据为null
+  setIsLoadingMore(false); // 重置加载更多状态
+};
 
   return (
     <>
