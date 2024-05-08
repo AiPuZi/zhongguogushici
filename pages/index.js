@@ -95,17 +95,15 @@ function Home({ initialPoetryData }) {
   };
 
   const handleSearch = async (event) => {
-    event.preventDefault();
-    const keyword = event.target.value.trim();
-    setSearchKeyword(keyword);
+  event.preventDefault();
 
-    if (keyword) {
-      const data = await searchPoems(keyword);
-      setPoetryData(data);
-    } else {
-      setPoetryData(initialPoetryData);
-    }
-  };
+  if (searchKeyword) {
+    const data = await searchPoems(searchKeyword); // 使用searchKeyword状态
+    setPoetryData(data);
+  } else {
+    setPoetryData(initialPoetryData);
+  }
+};
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
