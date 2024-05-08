@@ -4,8 +4,7 @@ import Poem from '../components/poem';
 
 // 用于获取诗词数据的函数
 async function getPoetryData(category, page, perPage) {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/search?category=${category}&page=${page}&perPage=${perPage}`);
+  const response = await fetch(`/api/search?category=${category}&page=${page}&perPage=${perPage}`);
   const data = await response.json();
   return (Array.isArray(data) ? data : []).map(item => {
     let content = item.paragraphs || item.content || item.para || [];
@@ -21,7 +20,7 @@ async function getPoetryData(category, page, perPage) {
     const section = item.section || '';
     const comments = Array.isArray(item.comment) ? item.comment : [];
 
-    return {
+  return {
       title: item.title || '',
       author: item.author || '',
       chapter: item.chapter || '',
@@ -33,13 +32,22 @@ async function getPoetryData(category, page, perPage) {
   });
 }
 
-
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const initialPoetryData = await getPoetryData('quantangshi', 0, 9);
-  return {
+  const response = await fetch(`${baseUrl}/api/search?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
+  const poetryData = Array.isArray(data) ? data : [];
+ return {
     props: {
-      initialPoetryData,
+      initialPoetryData: poetryData.map(poem => ({
+        title: poem.title || '',
+        author: poem.author || '',
+        chapter: poem.chapter || '',
+        section: poem.section || '',
+        content: Array.isArray(poem.content) ? poem.content : poem.paragraphs || poem.para || [],
+        comments: Array.isArray(poem.comment) ? poem.comment : [],
+        rhythmic: poem.rhythmic || '', // 包含 rhythmic 字段
+      })),
     },
     revalidate: 10,
   };
@@ -51,6 +59,7 @@ export default function Home({ initialPoetryData }) {
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
+  const [forceUpdate, setForceUpdate] = useState(false); // 新增forceUpdate状态
 
   useEffect(() => {
     const loadPoetryData = async () => {
@@ -59,14 +68,15 @@ export default function Home({ initialPoetryData }) {
     };
 
     loadPoetryData();
-  }, [currentCategory, currentPage]); // 移除 forceUpdate 作为依赖项
+  }, [currentCategory, currentPage, forceUpdate]); // 添加forceUpdate作为依赖项
 
   const handleCategoryChange = (category, event) => {
-  event.preventDefault();
-  setCurrentCategory(category);
-  setCurrentPage(0);
-  setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
-};
+    event.preventDefault();
+    setCurrentCategory(category);
+    setCurrentPage(0);
+    setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
+    window.location.hash = category;
+  };
 
   const handleSearch = async (event) => {
     event.preventDefault();
