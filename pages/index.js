@@ -26,18 +26,22 @@ async function fetchData(category, page, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=1`);
-  const data = await response.json();
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
+  const poetryData = [];
 
-  // 更新这里的初始数据处理
-  const poetryData = Array.isArray(data) ? data.map(item => ({
-    ...item,
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-  })) : [];
+  for (const category of categories) {
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1000`); // 加载第一个 JSON 文件上的所有诗词数据
+    const data = await response.json();
+    const formattedData = Array.isArray(data) ? data.map(item => ({
+      ...item,
+      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    })) : [];
+    poetryData.push(formattedData);
+  }
 
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: poetryData.flat(), // 将多个分类的数据合并成一个数组
     },
     revalidate: 10,
   };
