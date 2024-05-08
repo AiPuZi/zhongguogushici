@@ -77,9 +77,16 @@ function Home({ initialPoetryData }) {
     setPoetryData(data);
   };
 
-  const goToNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+  const goToNextPage = async () => {
+  setCurrentPage(prevPage => prevPage + 1);
+
+  try {
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    setPoetryData(data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
@@ -146,7 +153,7 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={currentPage === 0 || poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
