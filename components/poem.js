@@ -4,6 +4,11 @@ export default function Poem({ title, author, content, chapter, section, comment
     <p key={index}>{comment}</p>
   ));
 
+// 如果 content 是一个数组，则将其连接为一个字符串
+  if (Array.isArray(content)) {
+    content = content.join('\n');
+  }
+  
   return (
     <div>
       {subtitle && <h4>{subtitle}</h4>}
