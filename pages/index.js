@@ -54,25 +54,30 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-  const fetchNextPageData = async () => {
-    if (nextPageData) {
-      setPoetryData(prevData => [...prevData, ...nextPageData]); // 更新当前页数据
-      setNextPageData(null); // 重置下一页数据为null
-    }
-  };
-  fetchNextPageData();
-}, [nextPageData, setPoetryData]);
+    const fetchDataAndSetPoetryData = async () => {
+      let keyword = '';
+      if (router.query.query) {
+        keyword = decodeURIComponent(router.query.query);
+      }
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      setPoetryData(data);
+    };
+    fetchDataAndSetPoetryData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
-useEffect(() => {
-  const prefetchNextPageData = async () => {
-    const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-    if (currentPage + 1 < totalPages) { // 检查下一页是否已加载
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
-      setNextPageData(data);
+  useEffect(() => {
+    const prefetchNextPageData = async () => {
+      const nextPage = currentPage + 1;
+      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+      if (nextPage <= totalPages) {
+        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+        setNextPageData(data);
+      }
+    };
+    if (!nextPageData) {
+      prefetchNextPageData();
     }
-  };
-  prefetchNextPageData();
-}, [currentCategory, currentPage, poetryData, poemsPerPage, searchKeyword]);
+  }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -89,20 +94,13 @@ useEffect(() => {
     setCurrentPage(0);
   };
 
-  const goToNextPage = async () => {
-  if (isLoadingMore) { // 防止连续多次点击
-    return;
-  }
-  setCurrentPage(prevPage => prevPage + 1);
-  setIsLoadingMore(true); // 设置加载更多状态
-};
+  const goToNextPage = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+  };
 
-
-const goToPrevPage = async () => {
-  setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-  setNextPageData(null); // 重置下一页数据为null
-  setIsLoadingMore(false); // 重置加载更多状态
-};
+  const goToPrevPage = async () => {
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+  };
 
   return (
     <>
