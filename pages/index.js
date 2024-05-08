@@ -3,46 +3,23 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage, keyword) {
-  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
-  if (keyword) {
-    url = `/api/search?query=${encodeURIComponent(keyword)}`;
-  }
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+async function fetchData(category) {
+  const baseUrl = process.env.API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1`);
   const data = await response.json();
-  return data.map(item => ({
-    title: item.title || '',
-    author: item.author || '',
-    chapter: item.chapter || '',
-    section: item.section || '',
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    comments: Array.isArray(item.comment) ? item.comment : [],
-    rhythmic: item.rhythmic || '',
-  }));
+  return Array.isArray(data) && data.length > 0 ? data[0] : null; // Take the first poem from each category
 }
 
 export async function getStaticProps() {
-  const baseUrl = process.env.API_BASE_URL;
-  // Load the first page of data for each category
   const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-  const initialPoetryData = await Promise.all(categories.map(async (category) => {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1`);
-    const data = await response.json();
-    return Array.isArray(data) && data.length > 0 ? ({
-      category: category,
-      poetry: data.map(item => ({
-        ...item,
-        content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-      }))[0] // Only take the first poem for each category
-    }) : null;
-  }));
+  const initialPoetryData = await Promise.all(categories.map(async (category) => ({
+    category: category,
+    poetry: await fetchData(category),
+  })));
 
   return {
     props: {
-      initialPoetryData: initialPoetryData.filter(item => item !== null), // Filter out null items
+      initialPoetryData: initialPoetryData.filter(item => item.poetry !== null), // Filter out categories with no data
     },
     revalidate: 10,
   };
@@ -50,7 +27,6 @@ export async function getStaticProps() {
 
 function Home({ initialPoetryData }) {
   const router = useRouter();
-  const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -62,23 +38,15 @@ function Home({ initialPoetryData }) {
       if (router.query.query) {
         keyword = decodeURIComponent(router.query.query);
       }
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      const data = await fetchData(currentPage, poemsPerPage, keyword);
       setPoetryData(data);
     };
     fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query]);
-
-  const handleCategoryChange = (category, event) => {
-    event.preventDefault();
-    setCurrentCategory(category);
-    setCurrentPage(0);
-    setPoetryData([]);
-    setSearchKeyword('');
-  };
+  }, [currentPage, poemsPerPage, router.query]);
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
   };
 
@@ -113,7 +81,7 @@ function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-
+              
       <nav className="poetry-navigation">
         <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
