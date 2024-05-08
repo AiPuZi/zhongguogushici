@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
+import { useRouter } from 'next/router';
 
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/poems?category=${category}&page=${page}&perPage=${perPage}`);
@@ -55,33 +56,51 @@ export async function getStaticProps() {
 }
 
 function Home({ initialPoetryData }) {
+  const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
-  const [forceUpdate, setForceUpdate] = useState(false); // 新增forceUpdate状态
+  const [forceUpdate, setForceUpdate] = useState(false);
 
   useEffect(() => {
-    const loadPoetryData = async () => {
-      const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
-      setPoetryData(data);
+    const fetchData = async () => {
+      if (router.query.query) {
+        const keyword = router.query.query;
+        const data = await searchPoems(keyword);
+        setPoetryData(data);
+      } else {
+        const data = await getPoetryData(currentCategory, currentPage, poemsPerPage);
+        setPoetryData(data);
+      }
     };
+    fetchData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query, forceUpdate]);
 
-    loadPoetryData();
-  }, [currentCategory, currentPage, forceUpdate]); // 添加forceUpdate作为依赖项
+  useEffect(() => {
+    const { query } = router.query;
+    if (query.query) {
+      setPoetryData([]);
+    } else {
+      setPoetryData(initialPoetryData);
+    }
+  }, [router.query, initialPoetryData]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    setForceUpdate(f => !f); // 切换forceUpdate的值来强制触发useEffect
-    window.location.hash = category;
+    setForceUpdate(f => !f);
+    router.push(`/?category=${category}`);
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    window.location.href = `/search?query=${encodeURIComponent(searchInput)}`;
+    const keyword = searchInput.trim();
+    if (keyword) {
+      router.push(`/search?query=${encodeURIComponent(keyword)}`);
+    }
   };
 
   const goToNextPage = () => {
