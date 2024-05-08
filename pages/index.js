@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
 async function getPoetryData(category, page, perPage) {
   const response = await fetch(`/api/poems?category=${category}&page=${page}&perPage=${perPage}`);
+
   const data = await response.json();
 
   return (Array.isArray(data) ? data : []).map(item => {
     let content = item.paragraphs || item.content || item.para || [];
+
     if (typeof content === 'string') {
       content = content.split('\n');
     } else if (!Array.isArray(content)) {
@@ -59,15 +62,20 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9; // 每页显示的诗词数量
   const [forceUpdate, setForceUpdate] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      let keyword = '';
+
       if (router.query.query) {
-        const keyword = router.query.query;
+        keyword = decodeURIComponent(router.query.query);
+      }
+
+      if (keyword) {
         const data = await searchPoems(keyword);
         setPoetryData(data);
       } else {
@@ -75,17 +83,9 @@ function Home({ initialPoetryData }) {
         setPoetryData(data);
       }
     };
-    fetchData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query, forceUpdate]);
 
-  useEffect(() => {
-    const { query } = router.query;
-    if (query.query) {
-      setPoetryData([]);
-    } else {
-      setPoetryData(initialPoetryData);
-    }
-  }, [router.query, initialPoetryData]);
+    fetchData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query, forceUpdate]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -93,13 +93,19 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     setForceUpdate(f => !f);
     router.push(`/?category=${category}`);
+    // 清空搜索关键词
+    setSearchKeyword('');
   };
 
-  const handleSearch = async (event) => {
+  const handleSearch = (event) => {
     event.preventDefault();
-    const keyword = searchInput.trim();
+    const keyword = event.target.value.trim();
     if (keyword) {
+      // 当前实现仍跳转到搜索结果页面，若要避免跳转，请注释掉以下两行
       router.push(`/search?query=${encodeURIComponent(keyword)}`);
+    } else {
+      // 当搜索框为空时，恢复初始数据
+      setPoetryData(initialPoetryData);
     }
   };
 
