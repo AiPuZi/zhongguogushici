@@ -37,44 +37,13 @@ export default function handler(req, res) {
         }
       });
 
-      let paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
-
-      // 检查是否需要加载更多诗词以填满当前页
-      if (paginatedPoems.length < poemsPerPage && allPoems.length < startIndex + poemsPerPage) {
-        // 计算剩余需要加载的诗词数量
-        const remainingPoemsToLoad = poemsPerPage - paginatedPoems.length;
-        // 计算下一个需要加载的文件的数量
-        const filesToLoad = Math.ceil(remainingPoemsToLoad / poemsPerPage);
-        let loadedFiles = 0;
-
-        // 加载剩余的文件
-        validFiles.forEach(file => {
-          const filePath = path.join(categoryDirPath, file);
-          try {
-            const fileContents = fs.readFileSync(filePath, 'utf8');
-            const jsonContent = JSON.parse(fileContents);
-            if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
-              console.error(`File ${filePath} does not contain an array or is empty.`);
-              return;
-            }
-            allPoems = allPoems.concat(jsonContent);
-            loadedFiles++;
-
-            if (loadedFiles === filesToLoad) {
-              // 获取填满当前页的诗词
-              paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
-              return false; // 终止循环
-            }
-          } catch (error) {
-            console.error(`Error reading or parsing file ${filePath}:`, error);
-            return res.status(500).json({ error: 'Error reading or parsing file' });
-          }
-        });
-      }
-
+      const paginatedPoems = allPoems.slice(startIndex, startIndex + poemsPerPage);
       res.status(200).json(paginatedPoems);
     });
   } else if (query) {
+    // 验证查询参数的安全性
+    const sanitizedQuery = sanitizeInput(query);
+
     // 处理查询参数的逻辑
     // 注意：这里的搜索逻辑需要根据实际需求进行实现，以下是一个简单的示例
     const examplePoems = [
@@ -83,9 +52,9 @@ export default function handler(req, res) {
     ];
 
     const filteredPoems = examplePoems.filter(poem =>
-      poem.title.includes(query) ||
-      poem.author.includes(query) ||
-      poem.content.includes(query)
+      poem.title.includes(sanitizedQuery) ||
+      poem.author.includes(sanitizedQuery) ||
+      poem.content.includes(sanitizedQuery)
     );
 
     res.status(200).json(filteredPoems);
@@ -93,4 +62,11 @@ export default function handler(req, res) {
     // 如果没有提供分类或查询参数，返回错误响应
     res.status(400).json({ error: 'Missing category or query parameter' });
   }
+}
+
+// 辅助函数：对输入进行简单的安全性验证和过滤
+function sanitizeInput(input) {
+  // 在此实现适当的验证和过滤逻辑
+  // 例如，可以使用正则表达式或其他方法过滤特殊字符或执行其他验证
+  return input.trim(); // 示例：去除首尾空白
 }
