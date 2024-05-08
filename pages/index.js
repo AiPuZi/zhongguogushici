@@ -95,42 +95,26 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-  if (isLoadingMore) return; // 防止快速点击导致多次加载
-
-  setIsLoadingMore(true);
-
-  try {
-    // 如果有预加载的数据，直接使用并设置下一页数据为null
-    if (nextPageData) {
-      setPoetryData([...poetryData, ...nextPageData]);
-      setNextPageData(null);
-    } else {
-      // 否则，加载下一页数据
-      const nextPage = currentPage + 1;
-      if (nextPage < totalPages) {
-        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
-        setPoetryData([...poetryData, ...data]);
-      } else {
-        console.log("已经是最后一页");
-        return;
-      }
-    }
-
+  if (nextPageData) {
+    setPoetryData(nextPageData);
+    setNextPageData(null);
     setCurrentPage(prevPage => prevPage + 1);
-    // 加载新的下一页数据
-    const nextPageForPrefetch = currentPage + 2;
-    if (nextPageForPrefetch < totalPages) {
-      const prefetchData = await fetchData(currentCategory, nextPageForPrefetch, poemsPerPage, searchKeyword);
-      setNextPageData(prefetchData);
-    } else {
-      setNextPageData(null);
+    prefetchNextPageData(); // 立即预加载下一页数据
+  } else {
+    setIsLoadingMore(true);
+    try {
+      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
+      setPoetryData([...poetryData, ...data]);
+      setCurrentPage(prevPage => prevPage + 1);
+      prefetchNextPageData(); // 立即预加载下一页数据
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingMore(false);
     }
-  } catch (error) {
-    console.error("加载下一页数据出错:", error);
-  } finally {
-    setIsLoadingMore(false);
   }
 };
+
 
   const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
