@@ -134,7 +134,7 @@ function Home({ initialPoetryData }) {
             type="text"
             id="searchInput"
             placeholder="搜索标题、作者、内容..."
-            value={searchInput}
+            value={searchKeyword}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <button id="searchButton" onClick={handleSearch}>搜索</button>
