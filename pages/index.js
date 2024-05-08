@@ -49,6 +49,8 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [canLoadMore, setCanLoadMore] = useState(true); // 新增状态，用于判断是否还可以加载更多数据
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -58,10 +60,32 @@ function Home({ initialPoetryData }) {
         keyword = decodeURIComponent(router.query.query);
       }
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      setPoetryData(data);
+      if (currentPage === 0) {
+        setPoetryData(data);
+      } else {
+        setPoetryData(prevData => [...prevData, ...data]);
+      }
     };
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
+
+  // 添加滚动监听以实现懒加载
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
+      const body = document.body;
+      const html = document.documentElement;
+      const docHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+      const windowBottom = windowHeight + window.pageYOffset;
+      if (windowBottom >= docHeight - 50 && !isLoadingMore && canLoadMore) {
+        setIsLoadingMore(true);
+        goToNextPage().then(() => setIsLoadingMore(false));
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLoadingMore, canLoadMore]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -69,19 +93,22 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     setPoetryData([]);
     setSearchKeyword('');
+    setCanLoadMore(true);
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
     const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
+    setCurrentPage(0);
+    setCanLoadMore(true);
   };
 
-  const goToNextPage = () => {
+  const goToNextPage = async () => {
     setCurrentPage(prevPage => prevPage + 1);
   };
 
-  const goToPrevPage = () => {
+  const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
