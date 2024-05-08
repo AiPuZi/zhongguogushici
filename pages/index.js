@@ -99,13 +99,19 @@ function Home({ initialPoetryData }) {
     setPoetryData(nextPageData);
     setNextPageData(null);
     setCurrentPage(prevPage => prevPage + 1);
+
+    // 立即预加载下一页数据
+    prefetchNextPageData();
   } else {
-    const nextPage = currentPage + 1;
-    const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-    if (nextPage < totalPages) {
-      const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+    setIsLoadingMore(true);
+    try {
+      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, searchKeyword);
       setPoetryData([...poetryData, ...data]);
       setCurrentPage(prevPage => prevPage + 1);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingMore(false);
     }
   }
 };
