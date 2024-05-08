@@ -4,23 +4,16 @@ export default function Poem({ title, author, content, chapter, section, comment
     <p key={index}>{comment}</p>
   ));
 
-  let contentElements = null;
-  if (Array.isArray(content)) {
-    // 如果内容是字符串数组，则将每行内容渲染为一个段落
-    contentElements = content.map((line, index) => <p key={index} style={{ marginBottom: '16px' }}>{line}</p>);
-  } else {
-    // 如果内容是字符串，则直接渲染为一个段落
-    contentElements = <p>{content}</p>;
-  }
-
   return (
     <div>
       {subtitle && <h4>{subtitle}</h4>}
       {title ? <h3>{title}</h3> : (rhythmic && <h3>{rhythmic}</h3>)}
       {author && <h4>{author}</h4>}
-      {/* 渲染诗词内容 */}
+      {/* 直接渲染content数组的每个元素为一个段落 */}
       <div>
-        {contentElements}
+        {Array.isArray(content) ? content.map((paragraph, index) => (
+          <p key={index} style={{ marginBottom: '16px' }}>{paragraph}</p>
+        )) : <p>{content}</p>}
       </div>
       <div className="comments">
         {commentElements}
