@@ -107,34 +107,41 @@ function Home({ initialPoetryData }) {
   };
 
   const handleNextPage = async () => {
-  if (currentPage + 1 < pageList.length) {
-    setCurrentPage(currentPage + 1);
-  } else {
-    const nextPage = currentPage + 1;
-    const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+    if (currentPage + 1 < pageList.length) {
+      setCurrentPage(currentPage + 1);
+    } else {
+      const nextPage = currentPage + 1;
+      const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
 
-    setPageList((prevList) => [
-      ...prevList.slice(-maxCachedPages + 1),
-      data,
-    ]);
+      setPageList((prevList) => [
+        ...prevList.slice(-maxCachedPages + 1),
+        data,
+      ]);
 
-    setCurrentPage(nextPage);
-  }
-  
-  // 重新加载数据
-  await fetchDataAndSetPoetryData();
-};
+      setCurrentPage(nextPage);
+    }
+    
+    // 重新加载数据
+    await fetchDataAndSetPoetryData();
+  };
 
-const handlePreviousPage = async () => {
-  setCurrentPage(Math.max(currentPage - 1, 0));
-  
-  // 重新加载数据
-  await fetchDataAndSetPoetryData();
-};
-
-
-  const handlePreviousPage = () => {
+  const handlePreviousPage = async () => {
     setCurrentPage(Math.max(currentPage - 1, 0));
+    
+    // 重新加载数据
+    await fetchDataAndSetPoetryData();
+  };
+
+  const fetchDataAndSetPoetryData = async () => {
+    let keyword = '';
+
+    if (router.query.query) {
+      keyword = decodeURIComponent(router.query.query);
+    }
+
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+
+    setPoetryData(data);
   };
 
   return (
