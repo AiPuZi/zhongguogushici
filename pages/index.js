@@ -3,31 +3,30 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage, keyword, nextPageData) {
-  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
-  if (keyword) {
-    url = `/api/search?query=${encodeURIComponent(keyword)}`;
+async function fetchData(category, startPage, pagesToLoad, perPage, keyword) {
+  let allData = [];
+  for(let i = 0; i < pagesToLoad; i++) {
+    let page = startPage + i;
+    let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+    if (keyword) {
+      url = `/api/search?query=${encodeURIComponent(keyword)}`;
+    }
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    allData = allData.concat(data.map(item => ({
+      title: item.title || '',
+      author: item.author || '',
+      chapter: item.chapter || '',
+      section: item.section || '',
+      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+      comments: Array.isArray(item.comment) ? item.comment : [],
+      rhythmic: item.rhythmic || '',
+    })));
   }
-
-  // 如果下一页数据存在，重新加载8页数据
-  if (nextPageData) {
-    url = `/api/poems?category=${category}&page=0&perPage=${perPage * 8}`;
-  }
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.map(item => ({
-    title: item.title || '',
-    author: item.author || '',
-    chapter: item.chapter || '',
-    section: item.section || '',
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    comments: Array.isArray(item.comment) ? item.comment : [],
-    rhythmic: item.rhythmic || '',
-  }));
+  return allData;
 }
 
 export async function getStaticProps() {
@@ -35,7 +34,6 @@ export async function getStaticProps() {
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
-  // 更新这里的初始数据处理
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
@@ -55,8 +53,7 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState(null); // 用于存储下一页的数据
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // 用于判断是否正在加载更多数据
+  const [loadedPages, setLoadedPages] = useState(1); // 新增状态，用于跟踪已加载的页数
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -65,33 +62,15 @@ function Home({ initialPoetryData }) {
       if (router.query.query) {
         keyword = decodeURIComponent(router.query.query);
       }
-      
-      // 调整请求数据的逻辑，根据当前页数和下一页数据决定是否重新加载 8 页数据
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword, nextPageData);
-      setPoetryData(data);
-    };
-    fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, nextPageData, router.query]);
-
-  // 预加载下一页数据的操作
-  useEffect(() => {
-    const prefetchNextPageData = async () => {
-      const nextPage = currentPage + 1;
-      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-      if (nextPage <= totalPages) {
-        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
-        setNextPageData(data);
+      const remainingPages = loadedPages - currentPage;
+      if(remainingPages <= 3) {
+        const data = await fetchData(currentCategory, loadedPages, 8, poemsPerPage, keyword);
+        setPoetryData(prevData => prevData.concat(data));
+        setLoadedPages(prevLoadedPages => prevLoadedPages + 8);
       }
     };
-    // 判断是否需要预加载下一页数据
-    if (!nextPageData && !isLoadingMore) {
-      // 通过设置 isLoadingMore 状态来避免重复预加载
-      setIsLoadingMore(true);
-      prefetchNextPageData().finally(() => {
-        setIsLoadingMore(false);
-      });
-    }
-  }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword, isLoadingMore]);
+    fetchDataAndSetPoetryData();
+  }, [currentCategory, currentPage, loadedPages, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -99,30 +78,22 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     setPoetryData([]);
     setSearchKeyword('');
+    setLoadedPages(1); // 切换分类时重置已加载的页数
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); // Reset to page 0 on search
+    const data = await fetchData(currentCategory, 0, 8, poemsPerPage, searchKeyword); // 重置到第0页并加载8页数据
     setPoetryData(data);
     setCurrentPage(0);
+    setLoadedPages(8); // 搜索时重置已加载的页数
   };
 
   const goToNextPage = () => {
-  const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-  if (currentPage + 1 === totalPages) {
-    if (nextPageData) {
-      // Load next set of data by resetting the currentPage
-      setCurrentPage(0);
-    } else {
-      setCurrentPage(prevPage => prevPage + 1);
-    }
-  } else {
     setCurrentPage(prevPage => prevPage + 1);
-  }
-};
+  };
 
-  const goToPrevPage = () => {
+  const goToPrevPage = async () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
@@ -184,10 +155,9 @@ function Home({ initialPoetryData }) {
         ))}
       </main>
 
-      {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
