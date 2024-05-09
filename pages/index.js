@@ -3,44 +3,33 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, startPage, pagesToLoad, perPage, keyword) {
-  let allData = [];
-  for(let i = 0; i < pagesToLoad; i++) {
-    let page = startPage + i;
-    let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
-    if (keyword) {
-      url = `/api/search?query=${encodeURIComponent(keyword)}`;
-    }
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    allData = allData.concat(data.map(item => ({
-      title: item.title || '',
-      author: item.author || '',
-      chapter: item.chapter || '',
-      section: item.section || '',
-      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-      comments: Array.isArray(item.comment) ? item.comment : [],
-      rhythmic: item.rhythmic || '',
-    })));
+async function fetchData(category, page, perPage, keyword) {
+  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+  if (keyword) {
+    url = `/api/search?query=${encodeURIComponent(keyword)}`;
   }
-  return allData;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  // 加载前8页的数据
-  const pagesToLoad = 8;
-  const perPage = 9;
-  let initialPoetryData = [];
-  for (let i = 0; i < pagesToLoad; i++) {
-    const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=${i}&perPage=${perPage}`);
-    const data = await response.json();
-    initialPoetryData = initialPoetryData.concat(data);
-  }
+  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
 
+  // 更新这里的初始数据处理
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
@@ -60,28 +49,19 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [loadedPages, setLoadedPages] = useState(1); // 新增状态，用于跟踪已加载的页数
   const poemsPerPage = 9;
 
   useEffect(() => {
-    // 监控滚动和加载数据
-    const handleScroll = async () => {
-      // 检查是否滚动到倒数第三页
-      const totalPagesLoaded = Math.ceil(poetryData.length / poemsPerPage);
-      const totalPagesViewed = Math.ceil((currentPage + 1) * poemsPerPage / poemsPerPage);
-      if (totalPagesLoaded - totalPagesViewed <= 3) {
-        // 加载更多数据
-        const newData = await fetchData(currentCategory, totalPagesLoaded, 8, poemsPerPage, searchKeyword);
-        setPoetryData(poetryData.concat(newData));
-        setLoadedPages(totalPagesLoaded + 8);
+    const fetchDataAndSetPoetryData = async () => {
+      let keyword = '';
+      if (router.query.query) {
+        keyword = decodeURIComponent(router.query.query);
       }
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      setPoetryData(data);
     };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [currentPage, loadedPages, poetryData, searchKeyword]);
+    fetchDataAndSetPoetryData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -89,22 +69,19 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     setPoetryData([]);
     setSearchKeyword('');
-    setLoadedPages(1); // 切换分类时重置已加载的页数
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, 0, 8, poemsPerPage, searchKeyword); // 重置到第0页并加载8页数据
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
-    setCurrentPage(0);
-    setLoadedPages(8); // 搜索时重置已加载的页数
   };
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
   };
 
-  const goToPrevPage = async () => {
+  const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
@@ -131,9 +108,9 @@ function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-              
+
       <nav className="poetry-navigation">
-        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
@@ -150,22 +127,23 @@ function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-     <main id="poetry-content">
-        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-          <div key={index} className="poem">
-            <Poem
-              title={poem.title}
-              author={poem.author}
-              content={poem.content}
-              chapter={poem.chapter}
-              section={poem.section}
-              comments={poem.comments}
-              rhythmic={poem.rhythmic}
-            />
-          </div>
-        ))}
-      </main>
+<main id="poetry-content">
+  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content}
+        chapter={poem.chapter}
+        section={poem.section}
+        comments={poem.comments}
+        rhythmic={poem.rhythmic}
+      />
+    </div>
+  ))}
+</main>
 
+      {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
         <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
