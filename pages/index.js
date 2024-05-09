@@ -31,8 +31,15 @@ async function fetchData(category, startPage, pagesToLoad, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
+  // 加载前8页的数据
+  const pagesToLoad = 8;
+  const perPage = 9;
+  let initialPoetryData = [];
+  for (let i = 0; i < pagesToLoad; i++) {
+    const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=${i}&perPage=${perPage}`);
+    const data = await response.json();
+    initialPoetryData = initialPoetryData.concat(data);
+  }
 
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
@@ -57,20 +64,24 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    const fetchDataAndSetPoetryData = async () => {
-      let keyword = '';
-      if (router.query.query) {
-        keyword = decodeURIComponent(router.query.query);
-      }
-      const remainingPages = loadedPages - currentPage;
-      if(remainingPages <= 3) {
-        const data = await fetchData(currentCategory, loadedPages, 8, poemsPerPage, keyword);
-        setPoetryData(prevData => prevData.concat(data));
-        setLoadedPages(prevLoadedPages => prevLoadedPages + 8);
+    // 监控滚动和加载数据
+    const handleScroll = async () => {
+      // 检查是否滚动到倒数第三页
+      const totalPagesLoaded = Math.ceil(poetryData.length / poemsPerPage);
+      const totalPagesViewed = Math.ceil((currentPage + 1) * poemsPerPage / poemsPerPage);
+      if (totalPagesLoaded - totalPagesViewed <= 3) {
+        // 加载更多数据
+        const newData = await fetchData(currentCategory, totalPagesLoaded, 8, poemsPerPage, searchKeyword);
+        setPoetryData(poetryData.concat(newData));
+        setLoadedPages(totalPagesLoaded + 8);
       }
     };
-    fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, loadedPages, poemsPerPage, router.query]);
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [currentPage, loadedPages, poetryData, searchKeyword]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
