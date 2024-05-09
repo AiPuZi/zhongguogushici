@@ -3,11 +3,8 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage, keyword) {
-  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
-  if (keyword) {
-    url = `/api/search?query=${encodeURIComponent(keyword)}`;
-  }
+async function fetchData(category, page, perPage) {
+  const url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -25,56 +22,48 @@ async function fetchData(category, page, perPage, keyword) {
 }
 
 export async function getStaticProps() {
-  const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
 
-  // 更新这里的初始数据处理
-  const poetryData = Array.isArray(data) ? data.map(item => ({
-    ...item,
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-  })) : [];
+  const baseUrl = process.env.API_BASE_URL;
+  const initialData = {};
+
+  for (const category of categories) {
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=3`);
+    const data = await response.json();
+    initialData[category] = data.map(item => ({
+      ...item,
+      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    }));
+  }
 
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialData,
     },
     revalidate: 10,
   };
 }
 
-function Home({ initialPoetryData }) {
+function Home({ initialData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const poemsPerPage = 9;
+  const [poetryData, setPoetryData] = useState(initialData[currentCategory] || []);
+  const [currentPage, setCurrentPage] = useState(1); // Start from page 1
+  const poemsPerPage = 3; // 3 poems per page
 
   useEffect(() => {
     const fetchDataAndSetPoetryData = async () => {
-      let keyword = '';
-      if (router.query.query) {
-        keyword = decodeURIComponent(router.query.query);
-      }
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      const data = await fetchData(currentCategory, currentPage - 1, poemsPerPage);
       setPoetryData(data);
     };
     fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query]);
+  }, [currentCategory, currentPage, poemsPerPage]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
+    setCurrentPage(1); // Reset to first page when category changes
     setPoetryData([]);
-    setSearchKeyword('');
-  };
-
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
-    setPoetryData(data);
   };
 
   const goToNextPage = () => {
@@ -82,7 +71,7 @@ function Home({ initialPoetryData }) {
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
+    setCurrentPage(prevPage => (prevPage > 1 ? prevPage - 1 : 1)); // Ensure not to go below page 1
   };
 
   return (
@@ -97,16 +86,6 @@ function Home({ initialPoetryData }) {
           <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>古诗词</a>
         </div>
         <div className="slogan">莫愁前路无知己，天下谁人不识君。</div>
-        <div className="search-container">
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="搜索标题、作者、内容..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-          />
-          <button id="searchButton" onClick={handleSearch}>搜索</button>
-        </div>
       </header>
 
       <nav className="poetry-navigation">
@@ -128,25 +107,25 @@ function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
+        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+          <div key={index} className="poem">
+            <Poem
+              title={poem.title}
+              author={poem.author}
+              content={poem.content}
+              chapter={poem.chapter}
+              section={poem.section}
+              comments={poem.comments}
+              rhythmic={poem.rhythmic}
+            />
+          </div>
+        ))}
+      </main>
 
-      {/* 分页按钮 */}
+      {/* Pagination buttons */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
+        <button onClick={goToNextPage}>下一页</button>
       </div>
 
       <div className="attribution">
