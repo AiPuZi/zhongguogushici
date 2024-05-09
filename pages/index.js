@@ -115,7 +115,7 @@ function Home({ initialPoetryData }) {
         </Link>
         <Link href="/tangshisanbaishou">
         <a onClick={(e) => handleCategoryChange('tangshisanbaishou')}>
-        {'唐诗三百首'}
+        {'唐三百'}
         </a>
         </Link>
         <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
