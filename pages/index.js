@@ -26,7 +26,7 @@ async function fetchData(category, page, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi']; // Add more categories as needed
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi','yudingquantangshi','quansongci','songcisanbaishou','yuanqu','huajianji','nantangerzhuci','shijing','chuci','lunyu','mengxue','nalanxingde','youmengying']; // Add more categories as needed
   const initialPoetryData = {};
 
   for (const category of categories) {
@@ -53,7 +53,7 @@ function Home({ initialPoetryData }) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [categoryPageCounts, setCategoryPageCounts] = useState({}); // 新增状态，用于存储每个分类的第一个文件的总页数
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi'];
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi','yudingquantangshi','quansongci','songcisanbaishou','yuanqu','huajianji','nantangerzhuci','shijing','chuci','lunyu','mengxue','nalanxingde','youmengying'];
 
   useEffect(() => {
     // 初始化分类页数计数
