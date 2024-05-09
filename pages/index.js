@@ -49,8 +49,6 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页的数据
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -65,20 +63,6 @@ function Home({ initialPoetryData }) {
     fetchDataAndSetPoetryData();
   }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
-  useEffect(() => {
-    const prefetchNextPageData = async () => {
-      const nextPage = currentPage + 1;
-      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-      if (nextPage <= totalPages) {
-        const data = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
-        setNextPageData(data);
-      }
-    };
-    if (!nextPageData) {
-      prefetchNextPageData();
-    }
-  }, [currentCategory, currentPage, nextPageData, poetryData, poemsPerPage, searchKeyword]);
-
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
@@ -89,16 +73,15 @@ function Home({ initialPoetryData }) {
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); // Reset to page 0 on search
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
-    setCurrentPage(0);
   };
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
   };
 
-  const goToPrevPage = async () => {
+  const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
@@ -125,9 +108,9 @@ function Home({ initialPoetryData }) {
           <button id="searchButton" onClick={handleSearch}>搜索</button>
         </div>
       </header>
-              
+
       <nav className="poetry-navigation">
-        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
@@ -144,21 +127,21 @@ function Home({ initialPoetryData }) {
         <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
-      <main id="poetry-content">
-        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-          <div key={index} className="poem">
-            <Poem
-              title={poem.title}
-              author={poem.author}
-              content={poem.content}
-              chapter={poem.chapter}
-              section={poem.section}
-              comments={poem.comments}
-              rhythmic={poem.rhythmic}
-            />
-          </div>
-        ))}
-      </main>
+<main id="poetry-content">
+  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content}
+        chapter={poem.chapter}
+        section={poem.section}
+        comments={poem.comments}
+        rhythmic={poem.rhythmic}
+      />
+    </div>
+  ))}
+</main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
