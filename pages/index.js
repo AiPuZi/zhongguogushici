@@ -26,16 +26,17 @@ async function fetchData(category, page, perPage, keyword) {
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi','yudingquantangshi','quansongci','songcisanbaishou','yuanqu','huajianji','nantangerzhuci','shijing','chuci','lunyu','mengxue','nalanxingde','youmengying']; // Add more categories as needed
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi']; // Add more categories as needed
   const initialPoetryData = {};
 
   for (const category of categories) {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=9`);
-    const data = await response.json();
-    initialPoetryData[category] = Array.isArray(data) ? data.map(item => ({
-      ...item,
-      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    })) : [];
+    const categoryData = [];
+    for (let i = 0; i < 20; i++) {
+      const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=${i}&perPage=9`);
+      const data = await response.json();
+      categoryData.push(...data);
+    }
+    initialPoetryData[category] = categoryData;
   }
 
   return {
@@ -52,16 +53,6 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData[currentCategory] || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [categoryPageCounts, setCategoryPageCounts] = useState({}); // 新增状态，用于存储每个分类的第一个文件的总页数
-
-  useEffect(() => {
-    // 初始化分类页数计数
-    const categoryPages = {};
-    for (const category in initialPoetryData) {
-      categoryPages[category] = Math.ceil(initialPoetryData[category].length / 9);
-    }
-    setCategoryPageCounts(categoryPages);
-  }, [initialPoetryData]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -78,39 +69,19 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
   };
 
-  async function goToNextPage(event) {
-  event.preventDefault();
-
-  // 只有当当前页面小于该分类总页数时才进入下一页
-  if (currentPage < categoryPageCounts[currentCategory] - 1) {
+  const goToNextPage = async () => {
     setCurrentPage(prevPage => prevPage + 1);
-  }
-  // 如果已经是最后一页，不做任何操作，避免跳转到其他分类
-}
+    const totalPages = Math.ceil(poetryData.length / 9);
+    if (currentPage === totalPages - 5) {
+      const nextPage = currentPage + 1;
+      const data = await fetchData(currentCategory, nextPage, 9, searchKeyword);
+      setPoetryData(prevData => [...prevData, ...data]);
+    }
+  };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
-
-  async function loadNextCategoryData() {
-    const nextCategory = categories[categories.indexOf(currentCategory) + 1];
-    if (nextCategory) {
-      setCurrentCategory(nextCategory);
-      setCurrentPage(0);
-      setPoetryData(initialPoetryData[nextCategory][0] || []);
-      setCategoryPageCounts({
-        ...categoryPageCounts,
-        [nextCategory]: 0, // 先设置为0，等实际请求后更新
-      });
-      const response = await fetchData(nextCategory, 0, 9, '');
-      const data = await response;
-      initialPoetryData[nextCategory] = [data];
-      setCategoryPageCounts({
-        ...categoryPageCounts,
-        [nextCategory]: Math.ceil(data.length / 9),
-      });
-    }
-  }
 
   return (
     <>
