@@ -3,8 +3,11 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage) {
-  const url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+async function fetchData(category, page, perPage, keyword) {
+  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+  if (keyword) {
+    url = `/api/search?query=${encodeURIComponent(keyword)}`;
+  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -22,83 +25,64 @@ async function fetchData(category, page, perPage) {
 }
 
 export async function getStaticProps() {
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
-
   const baseUrl = process.env.API_BASE_URL;
-  const initialData = {};
-  const nextPagesData = {}; // Store next pages data for each category
+  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
 
-  for (const category of categories) {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=3`);
-    const data = await response.json();
-    initialData[category] = data.map(item => ({
-      ...item,
-      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    }));
-
-    // Preload next page data
-    const nextResponse = await fetch(`${baseUrl}/api/poems?category=${category}&page=1&perPage=3`);
-    const nextData = await nextResponse.json();
-    nextPagesData[category] = nextData.map(item => ({
-      ...item,
-      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    }));
-  }
+  // 更新这里的初始数据处理
+  const poetryData = Array.isArray(data) ? data.map(item => ({
+    ...item,
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+  })) : [];
 
   return {
     props: {
-      initialData,
-      nextPagesData,
+      initialPoetryData: poetryData,
     },
     revalidate: 10,
   };
 }
 
-function Home({ initialData }) {
+function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialData[currentCategory] || []);
-  const [nextPageData, setNextPageData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // Start from page 1
-  const poemsPerPage = 1; // 1 poem per page
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const poemsPerPage = 9;
 
   useEffect(() => {
     const fetchDataAndSetPoetryData = async () => {
-      const data = await fetchData(currentCategory, currentPage - 1, poemsPerPage);
+      let keyword = '';
+      if (router.query.query) {
+        keyword = decodeURIComponent(router.query.query);
+      }
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       setPoetryData(data);
     };
     fetchDataAndSetPoetryData();
-
-    // Preload next page data
-    const preloadNextPageData = async () => {
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage);
-      setNextPageData(data);
-    };
-    preloadNextPageData();
-  }, [currentCategory, currentPage, poemsPerPage]);
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(1); // Reset to first page when category changes
+    setCurrentPage(0);
     setPoetryData([]);
-    setNextPageData([]);
+    setSearchKeyword('');
+  };
+
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    setPoetryData(data);
   };
 
   const goToNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
-    setPoetryData(nextPageData);
-    setNextPageData([]);
-    // Preload data for the next next page
-    const preloadNextPageData = async () => {
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage);
-      setNextPageData(data);
-    };
-    preloadNextPageData();
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prevPage => (prevPage > 1 ? prevPage - 1 : 1)); // Ensure not to go below page 1
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
@@ -144,25 +128,25 @@ function Home({ initialData }) {
       </nav>
       
 <main id="poetry-content">
-        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-          <div key={index} className="poem">
-            <Poem
-              title={poem.title}
-              author={poem.author}
-              content={poem.content}
-              chapter={poem.chapter}
-              section={poem.section}
-              comments={poem.comments}
-              rhythmic={poem.rhythmic}
-            />
-          </div>
-        ))}
-      </main>
+  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+    <div key={index} className="poem">
+      <Poem
+        title={poem.title}
+        author={poem.author}
+        content={poem.content}
+        chapter={poem.chapter}
+        section={poem.section}
+        comments={poem.comments}
+        rhythmic={poem.rhythmic}
+      />
+    </div>
+  ))}
+</main>
 
-      {/* Pagination buttons */}
+      {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
-        <button onClick={goToNextPage}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">
