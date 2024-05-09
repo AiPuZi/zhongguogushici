@@ -109,7 +109,7 @@ function Home({ initialPoetryData }) {
 
       <nav className="poetry-navigation">
         <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tanshisanbaishou', e)}>唐三百</a>
+        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
         <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
