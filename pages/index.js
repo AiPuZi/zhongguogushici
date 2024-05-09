@@ -31,7 +31,7 @@ export async function getStaticProps() {
 
   for (const category of categories) {
     const categoryData = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 15; i++) {
       const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=${i}&perPage=9`);
       const data = await response.json();
       categoryData.push(...data);
