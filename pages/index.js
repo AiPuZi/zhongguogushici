@@ -53,6 +53,7 @@ function Home({ initialPoetryData }) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [categoryPageCounts, setCategoryPageCounts] = useState({}); // 新增状态，用于存储每个分类的第一个文件的总页数
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi'];
 
   useEffect(() => {
     // 初始化分类页数计数
@@ -78,22 +79,23 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
   };
 
-  const goToNextPage = () => {
-    event.preventDefault(); // 添加这行代码来阻止默认的点击行为
-    if (currentPage < categoryPageCounts[currentCategory] - 1) {
-      setCurrentPage(prevPage => prevPage + 1);
-    } else {
-      if (currentCategory !== categories[categories.indexOf(currentCategory) + 1]) {
-        loadNextCategoryData();
-      }
+  async function goToNextPage(event) {
+  event.preventDefault();
+
+  if (currentPage < categoryPageCounts[currentCategory] - 1) {
+    setCurrentPage(prevPage => prevPage + 1);
+  } else {
+    if (currentCategory !== categories[categories.indexOf(currentCategory) + 1]) {
+      await loadNextCategoryData(categories); // 添加await关键字
     }
-  };
+  }
+}
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
-  async function loadNextCategoryData() {
+  async function loadNextCategoryData(categories) {
     const nextCategory = categories[categories.indexOf(currentCategory) + 1];
     if (nextCategory) {
       setCurrentCategory(nextCategory);
