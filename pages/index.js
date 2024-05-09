@@ -82,13 +82,11 @@ function Home({ initialPoetryData }) {
   async function goToNextPage(event) {
   event.preventDefault();
 
+  // 只有当当前页面小于该分类总页数时才进入下一页
   if (currentPage < categoryPageCounts[currentCategory] - 1) {
     setCurrentPage(prevPage => prevPage + 1);
-  } else {
-    if (currentCategory !== categories[categories.indexOf(currentCategory) + 1]) {
-      await loadNextCategoryData(categories); // 添加await关键字
-    }
   }
+  // 如果已经是最后一页，不做任何操作，避免跳转到其他分类
 }
 
   const goToPrevPage = () => {
