@@ -1,4 +1,4 @@
-export default function Poem({ title, author, content, chapter, section, comments = [], rhythmic }) {
+export default function Poem({ title, author, content, chapter, section, comments = [], rhythmic, ...rest }) {
   const subtitle = chapter || section; // 定义副标题
   const commentElements = comments.map((comment, index) => (
     <p key={index}>{comment}</p>
@@ -7,7 +7,8 @@ export default function Poem({ title, author, content, chapter, section, comment
   return (
     <div>
       {subtitle && <h4>{subtitle}</h4>}
-      {title ? <h3>{title}</h3> : (rhythmic && <h3>{rhythmic}</h3>)}
+      {title && <h3>{title}</h3>}
+      {rhythmic && <h3>{rhythmic}</h3>}
       {author && <h4>{author}</h4>}
       {/* 直接渲染content数组的每个元素为一个段落 */}
       <div>
@@ -18,6 +19,12 @@ export default function Poem({ title, author, content, chapter, section, comment
       <div className="comments">
         {commentElements}
       </div>
+      {/* 显示传递给组件的所有其他属性 */}
+      {Object.entries(rest).map(([key, value]) => (
+        <div key={key}>
+          <strong>{key}:</strong> {value}
+        </div>
+      ))}
     </div>
   );
 }
