@@ -53,7 +53,6 @@ function Home({ initialPoetryData }) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [categoryPageCounts, setCategoryPageCounts] = useState({}); // 新增状态，用于存储每个分类的第一个文件的总页数
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi','yudingquantangshi','quansongci','songcisanbaishou','yuanqu','huajianji','nantangerzhuci','shijing','chuci','lunyu','mengxue','nalanxingde','youmengying'];
 
   useEffect(() => {
     // 初始化分类页数计数
@@ -93,7 +92,7 @@ function Home({ initialPoetryData }) {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
-  async function loadNextCategoryData(categories) {
+  async function loadNextCategoryData() {
     const nextCategory = categories[categories.indexOf(currentCategory) + 1];
     if (nextCategory) {
       setCurrentCategory(nextCategory);
