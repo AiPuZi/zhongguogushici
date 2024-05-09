@@ -1,17 +1,19 @@
-   [
-{
-  "title": "弟子規",
-  "author": "李毓秀",
-  "content": [
-    	"chapter": "總敘",
-    	"paragraphs": [
+[
+  {
+    "title": "弟子規",
+    "author": "李毓秀",
+    "content": [
+      {
+        "chapter": "總敘",
+        "paragraphs": [
           "弟子規 聖人訓 首孝弟 次謹信",
           "泛愛眾 而親仁 有餘力 則學文"
-    	]
-     ]
-    },
-    {
-    	"chapter": "入則孝",
+        ]
+      }
+    ]
+  },
+  {
+    "chapter": "入則孝",
     	"paragraphs": [
           "父母呼 應勿緩 父母命 行勿懶",
           "父母教 須敬聽 父母責 須順承",
