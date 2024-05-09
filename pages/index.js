@@ -79,6 +79,7 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
+    event.preventDefault(); // 添加这行代码来阻止默认的点击行为
     if (currentPage < categoryPageCounts[currentCategory] - 1) {
       setCurrentPage(prevPage => prevPage + 1);
     } else {
