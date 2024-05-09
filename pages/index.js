@@ -25,13 +25,14 @@ async function fetchData(category, page, perPage, keyword) {
 }
 
 export async function getStaticProps() {
-  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
   const baseUrl = process.env.API_BASE_URL;
-  const initialData = {};
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi']; // Add more categories as needed
+  const initialPoetryData = {};
+
   for (const category of categories) {
     const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=9`);
     const data = await response.json();
-    initialData[category] = Array.isArray(data) ? data.map(item => ({
+    initialPoetryData[category] = Array.isArray(data) ? data.map(item => ({
       ...item,
       content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
     })) : [];
@@ -39,7 +40,7 @@ export async function getStaticProps() {
 
   return {
     props: {
-      initialPoetryData: initialData,
+      initialPoetryData,
     },
     revalidate: 10,
   };
@@ -51,13 +52,21 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData[currentCategory] || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页的数据
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
+  const [nextPageData, setNextPageData] = useState(null); 
+  const [isLoadingMore, setIsLoadingMore] = useState(false); 
   const poemsPerPage = 9;
 
   useEffect(() => {
-    setPoetryData(initialPoetryData[currentCategory] || []);
-  }, [currentCategory, initialPoetryData]);
+    const fetchDataAndSetPoetryData = async () => {
+      let keyword = '';
+      if (router.query.query) {
+        keyword = decodeURIComponent(router.query.query);
+      }
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      setPoetryData(data);
+    };
+    fetchDataAndSetPoetryData();
+  }, [currentCategory, currentPage, poemsPerPage, router.query]);
 
   useEffect(() => {
     const prefetchNextPageData = async () => {
@@ -77,12 +86,13 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
+    setPoetryData(initialPoetryData[category] || []);
     setSearchKeyword('');
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); // Reset to page 0 on search
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword); 
     setPoetryData(data);
     setCurrentPage(0);
   };
@@ -123,18 +133,7 @@ function Home({ initialPoetryData }) {
         <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
         <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
-        <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
-        <a href="#quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
-        <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
-        <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
-        <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
-        <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
-        <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
-        <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
-        <a href="#mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
-        <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
-        <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
+        {/* Add more category links here */}
       </nav>
       
       <main id="poetry-content">
@@ -153,10 +152,10 @@ function Home({ initialPoetryData }) {
         ))}
       </main>
 
-      {/* 分页按钮 */}
+      {/* Pagination buttons */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage}>下一页</button>
       </div>
 
       <div className="attribution">
