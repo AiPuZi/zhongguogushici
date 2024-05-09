@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
