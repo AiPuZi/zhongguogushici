@@ -66,9 +66,6 @@ function Home({ initialPoetryData }) {
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0);
-    setPoetryData([]);
-    setSearchKeyword('');
   };
 
   const handleSearch = async (event) => {
@@ -110,21 +107,21 @@ function Home({ initialPoetryData }) {
       </header>
 
       <nav className="poetry-navigation">
-       <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
-        <a href="#shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
-        <a href="#yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
-        <a href="#quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
-        <a href="#songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
-        <a href="#yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
-        <a href="#huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="#nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
-        <a href="#shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
-        <a href="#chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
-        <a href="#lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
-        <a href="#mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
-        <a href="#nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
-        <a href="#youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
+       <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
+        <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
+        <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
+        <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
+        <a href="/songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
+        <a href="/yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
+        <a href="/huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
+        <a href="/nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
+        <a href="/shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
+        <a href="/chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
+        <a href="/lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
+        <a href="/mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
+        <a href="/nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
+        <a href="/youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
       </nav>
       
 <main id="poetry-content">
