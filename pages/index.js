@@ -109,15 +109,14 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-    if (currentPage + 1 === totalPages) {
-      // Load next set of data
-      setCurrentPage(0);
-      setPoetryData([]);
-      return;
-    }
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+  const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+  if (currentPage + 1 === totalPages) {
+    // Load next set of data
+    setCurrentPage(0); // 重新加载8页数据
+    return;
+  }
+  setCurrentPage(prevPage => prevPage + 1);
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
