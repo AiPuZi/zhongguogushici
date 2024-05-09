@@ -26,11 +26,20 @@ export async function getStaticProps() {
 
   const baseUrl = process.env.API_BASE_URL;
   const initialData = {};
+  const nextPagesData = {}; // Store next pages data for each category
 
   for (const category of categories) {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=9`);
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=3`);
     const data = await response.json();
     initialData[category] = data.map(item => ({
+      ...item,
+      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    }));
+
+    // Preload next page data
+    const nextResponse = await fetch(`${baseUrl}/api/poems?category=${category}&page=1&perPage=3`);
+    const nextData = await nextResponse.json();
+    nextPagesData[category] = nextData.map(item => ({
       ...item,
       content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
     }));
@@ -39,6 +48,7 @@ export async function getStaticProps() {
   return {
     props: {
       initialData,
+      nextPagesData,
     },
     revalidate: 10,
   };
