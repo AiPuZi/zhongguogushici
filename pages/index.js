@@ -53,6 +53,42 @@ function Home({ initialPoetryData }) {
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
 
+  // 加载控制逻辑
+  const [visitedPages, setVisitedPages] = useState({});
+
+  useEffect(() => {
+    // 检查是否需要加载下一个文件的数据
+    const shouldLoadNextFile = () => {
+      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
+      return currentPage >= totalPages;
+    };
+
+    const loadNextFileData = async () => {
+      // 根据当前分类获取下一个文件的数据
+      // 这里假设下一个文件的页数从 0 开始
+      const nextPageCategory = getNextCategory(currentCategory);
+      const nextFileData = await fetchData(nextPageCategory, 0, poemsPerPage, searchKeyword);
+      setPoetryData(nextFileData);
+      setCurrentPage(0);
+      // 将下一个文件标记为已访问
+      setVisitedPages(prevState => ({ ...prevState, [nextPageCategory]: true }));
+    };
+
+    if (shouldLoadNextFile()) {
+      loadNextFileData();
+    }
+  }, [currentCategory, currentPage, poetryData, poemsPerPage, searchKeyword]);
+
+  const getNextCategory = (currentCategory) => {
+    // 这里假设分类为 'quantangshi', 'tangshisanbaishou', 'shuimotangshi', ...
+    // 下一个分类按顺序来
+    // 如果你有不同的分类逻辑，请自行修改这部分代码
+    const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', /* 其他分类 */];
+    const currentIndex = categories.indexOf(currentCategory);
+    const nextIndex = currentIndex + 1 >= categories.length ? 0 : currentIndex + 1;
+    return categories[nextIndex];
+  };
+
   useEffect(() => {
     const fetchDataAndSetPoetryData = async () => {
       let keyword = '';
