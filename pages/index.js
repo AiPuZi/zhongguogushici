@@ -113,6 +113,16 @@ function Home({ initialData }) {
           <a href="/" style={{ textDecoration: 'none', color: 'inherit' }}>古诗词</a>
         </div>
         <div className="slogan">莫愁前路无知己，天下谁人不识君。</div>
+        <div className="search-container">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="搜索标题、作者、内容..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+          />
+          <button id="searchButton" onClick={handleSearch}>搜索</button>
+        </div>
       </header>
 
       <nav className="poetry-navigation">
