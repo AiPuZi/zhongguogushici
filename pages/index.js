@@ -52,22 +52,20 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-  const fetchDataAndSetPoetryData = async () => {
-    let keyword = '';
-    if (router.query.query) {
-      keyword = decodeURIComponent(router.query.query);
-    }
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-    setPoetryData(data);
-  };
-  fetchDataAndSetPoetryData();
-}, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+     const fetchDataAndSetPoetryData = async () => {
+       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+       setPoetryData(data);
+     };
+     
+     if (currentCategory !== '') {
+       fetchDataAndSetPoetryData();
+     }
+   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(0); // 重置 currentPage 为 0
-  setSearchKeyword(''); // 重置 searchKeyword 为空
   };
 
   const handleSearch = async (event) => {
