@@ -66,6 +66,8 @@ function Home({ initialPoetryData }) {
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
+    setCurrentPage(0); // 重置 currentPage 为 0
+  setSearchKeyword(''); // 重置 searchKeyword 为空
   };
 
   const handleSearch = async (event) => {
