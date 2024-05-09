@@ -25,19 +25,21 @@ async function fetchData(category, page, perPage, keyword) {
 }
 
 export async function getStaticProps() {
+  const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', 'yudingquantangshi', 'quansongci', 'songcisanbaishou', 'yuanqu', 'huajianji', 'nantangerzhuci', 'shijing', 'chuci', 'lunyu', 'mengxue', 'nalanxingde', 'youmengying'];
   const baseUrl = process.env.API_BASE_URL;
-  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
-  const data = await response.json();
-
-  // 更新这里的初始数据处理
-  const poetryData = Array.isArray(data) ? data.map(item => ({
-    ...item,
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-  })) : [];
+  const initialData = {};
+  for (const category of categories) {
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=9`);
+    const data = await response.json();
+    initialData[category] = Array.isArray(data) ? data.map(item => ({
+      ...item,
+      content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    })) : [];
+  }
 
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: initialData,
     },
     revalidate: 10,
   };
@@ -46,60 +48,16 @@ export async function getStaticProps() {
 function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [poetryData, setPoetryData] = useState(initialPoetryData[currentCategory] || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页的数据
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 新增状态，用于判断是否正在加载更多数据
   const poemsPerPage = 9;
 
-  // 加载控制逻辑
-  const [visitedPages, setVisitedPages] = useState({});
-
   useEffect(() => {
-    // 检查是否需要加载下一个文件的数据
-    const shouldLoadNextFile = () => {
-      const totalPages = Math.ceil(poetryData.length / poemsPerPage);
-      return currentPage >= totalPages;
-    };
-
-    const loadNextFileData = async () => {
-      // 根据当前分类获取下一个文件的数据
-      // 这里假设下一个文件的页数从 0 开始
-      const nextPageCategory = getNextCategory(currentCategory);
-      const nextFileData = await fetchData(nextPageCategory, 0, poemsPerPage, searchKeyword);
-      setPoetryData(nextFileData);
-      setCurrentPage(0);
-      // 将下一个文件标记为已访问
-      setVisitedPages(prevState => ({ ...prevState, [nextPageCategory]: true }));
-    };
-
-    if (shouldLoadNextFile()) {
-      loadNextFileData();
-    }
-  }, [currentCategory, currentPage, poetryData, poemsPerPage, searchKeyword]);
-
-  const getNextCategory = (currentCategory) => {
-    // 这里假设分类为 'quantangshi', 'tangshisanbaishou', 'shuimotangshi', ...
-    // 下一个分类按顺序来
-    // 如果你有不同的分类逻辑，请自行修改这部分代码
-    const categories = ['quantangshi', 'tangshisanbaishou', 'shuimotangshi', /* 其他分类 */];
-    const currentIndex = categories.indexOf(currentCategory);
-    const nextIndex = currentIndex + 1 >= categories.length ? 0 : currentIndex + 1;
-    return categories[nextIndex];
-  };
-
-  useEffect(() => {
-    const fetchDataAndSetPoetryData = async () => {
-      let keyword = '';
-      if (router.query.query) {
-        keyword = decodeURIComponent(router.query.query);
-      }
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      setPoetryData(data);
-    };
-    fetchDataAndSetPoetryData();
-  }, [currentCategory, currentPage, poemsPerPage, router.query]);
+    setPoetryData(initialPoetryData[currentCategory] || []);
+  }, [currentCategory, initialPoetryData]);
 
   useEffect(() => {
     const prefetchNextPageData = async () => {
@@ -119,7 +77,6 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    setPoetryData([]);
     setSearchKeyword('');
   };
 
