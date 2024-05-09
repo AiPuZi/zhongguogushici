@@ -28,7 +28,7 @@ export async function getStaticProps() {
   const initialData = {};
 
   for (const category of categories) {
-    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=1`);
+    const response = await fetch(`${baseUrl}/api/poems?category=${category}&page=0&perPage=9`);
     const data = await response.json();
     initialData[category] = data.map(item => ({
       ...item,
