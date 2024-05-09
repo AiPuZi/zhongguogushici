@@ -111,11 +111,15 @@ function Home({ initialPoetryData }) {
   const goToNextPage = () => {
   const totalPages = Math.ceil(poetryData.length / poemsPerPage);
   if (currentPage + 1 === totalPages) {
-    // Load next set of data
-    setCurrentPage(0); // 重新加载8页数据
-    return;
+    if (nextPageData) {
+      // Load next set of data by resetting the currentPage
+      setCurrentPage(0);
+    } else {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  } else {
+    setCurrentPage(prevPage => prevPage + 1);
   }
-  setCurrentPage(prevPage => prevPage + 1);
 };
 
   const goToPrevPage = () => {
