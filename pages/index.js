@@ -99,12 +99,14 @@ function Home({ initialPoetryData }) {
   if (nextPageData.length > 0) {
     // 更新页面数据为预取的数据
     setPoetryData(nextPageData);
-    // 增加当前页的页数
-    setCurrentPage((prevPage) => prevPage + 1);
     // 清空nextPageData状态，以便下一次的预取操作
     setNextPageData([]);
-    // 立即预取下一页的数据
-    preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+    // 增加当前页的页数，并在状态更新后预取下一页的数据
+    setCurrentPage((prevPage) => {
+      const newPage = prevPage + 1;
+      preFetchNextPage(currentCategory, newPage, poemsPerPage, searchKeyword, setNextPageData);
+      return newPage;
+    });
   }
 };
 
