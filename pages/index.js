@@ -69,7 +69,7 @@ function Home({ initialPoetryData }) {
   return () => {
     cancel = true;
   };
-}, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+}, [currentCategory, currentPage, poemsPerPage, router.query.query]); // Make sure currentPage is in the dependency array
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -83,8 +83,10 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
+  if (poetryData.length === poemsPerPage) {
     setCurrentPage(prevPage => prevPage + 1);
-  };
+  }
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
