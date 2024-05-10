@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Poem from './PoemsContainer';
+import Poem from './components/PoemsContainer';
 
 // 假设这是你的诗词文件路径列表
 const poemFiles = [
