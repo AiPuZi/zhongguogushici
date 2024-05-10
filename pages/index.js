@@ -97,11 +97,13 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
-    setPoetryData(nextPageData);
-    await setCurrentPage((prevPage) => prevPage + 1);
+    // 先提取下一页数据，然后再更新当前页面数据和状态
+    const data = nextPageData;
+    setPoetryData(data);
+    setCurrentPage(prevPage => prevPage + 1);
     setNextPageData([]);
-    // 此处不需要await，因为我们不需要等待preFetchNextPage的结果
-    preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+    // 在更新状态后，立即预取下一页数据
+    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
   }
 };
 
