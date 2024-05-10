@@ -2,142 +2,94 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
-// 假设您的 NEXT_PUBLIC_API_BASE_URL 是在 .env.local 或类似文件中定义的
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-async function fetchData(category, page, perPage, fileIndex, baseUrl, searchKeyword) {
-  let url = `${baseUrl}/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
-  
-  if (searchKeyword) {
-    url += `&searchKeyword=${encodeURIComponent(searchKeyword)}`;
+async function fetchData(category, page, perPage, keyword) {
+  let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
+  if (keyword) {
+    url = `/api/search?query=${encodeURIComponent(keyword)}`;
   }
-
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  
-  return await response.json();
-}
-
-async function fetchFileCount(category) {
-  const url = `${baseUrl}/api/filecount?category=${category}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return await response.json();
+  const data = await response.json();
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 export async function getStaticProps() {
-  // 确保baseUrl是定义好的，否则在构建时可能会遇到问题
-  if (!baseUrl) {
-    console.error('NEXT_PUBLIC_API_BASE_URL environment variable is not set');
-    return {
-      props: {
-        initialPoetryData: [],
-        initialFileCount: 0,
-      },
-    };
-  }
+  const baseUrl = process.env.API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
+  const data = await response.json();
 
-  const initialData = await fetchData('quantangshi', 1, 9, 0, baseUrl);
+  // 更新这里的初始数据处理
+  const poetryData = Array.isArray(data) ? data.map(item => ({
+    ...item,
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+  })) : [];
+
   return {
     props: {
-      initialPoetryData: initialData.poems,
-      initialFileCount: initialData.totalFiles,
+      initialPoetryData: poetryData,
     },
     revalidate: 10,
   };
 }
 
-function Home({ initialPoetryData, initialFileCount }) {
+function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
-  const [poetryData, setPoetryData] = useState(initialPoetryData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentFileIndex, setCurrentFileIndex] = useState(0);
-  const [fileCount, setFileCount] = useState(initialFileCount);
-  const poemsPerPage = 9;
+  const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const poemsPerPage = 9;
 
   useEffect(() => {
-    let cancel = false;
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      setPoetryData(data);
+    }
+  };
+  
+  if (currentCategory !== '') {
+    fetchDataAndSetPoetryData();
+  }
 
-    const fetchAndSetPoetryData = async () => {
-      try {
-        const data = await fetchData(currentCategory, currentPage, poemsPerPage, currentFileIndex, baseUrl);
-        if (!cancel) {
-          setPoetryData(data.poems);
-        }
-      } catch (error) {
-        console.error('Error fetching poetry data:', error);
-      }
-    };
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query]); // Make sure currentPage is in the dependency array
 
-    fetchAndSetPoetryData();
-
-    return () => {
-      cancel = true;
-    };
-  }, [currentCategory, currentPage, currentFileIndex]);
-
-  useEffect(() => {
-    const fetchAndSetFileCount = async () => {
-      try {
-        const data = await fetchFileCount(currentCategory);
-        setFileCount(data.count);
-      } catch (error) {
-        console.error('Error fetching file count:', error);
-      }
-    };
-
-    fetchAndSetFileCount();
-  }, [currentCategory]);
-
-  const handleCategoryChange = async (category) => {
+  const handleCategoryChange = (category, event) => {
+    event.preventDefault();
     setCurrentCategory(category);
-    setCurrentPage(1);
-    setCurrentFileIndex(0);
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    try {
-      const data = await fetchData(currentCategory, 1, poemsPerPage, 0, baseUrl, searchKeyword);
-      setPoetryData(data.poems);
-      setCurrentPage(1);
-      setCurrentFileIndex(0);
-    } catch (error) {
-      console.error('Error performing search:', error);
-    }
-  };
-  
-  const goToNextPage = async () => {
-    const nextPage = currentPage + 1;
-    const data = await fetchData(currentCategory, nextPage, poemsPerPage, currentFileIndex);
-    
-    if (data.poems.length > 0) {
-      // There is data in the current file, simply update the page
-      setCurrentPage(nextPage);
-    } else if (currentFileIndex < fileCount - 1) {
-      // No more data in the current file, move to the next file
-      setCurrentFileIndex(currentFileIndex + 1);
-      setCurrentPage(1);
-    }
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    setPoetryData(data);
   };
 
-  const goToPrevPage = async () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    } else if (currentFileIndex > 0) {
-      // Move to the previous file last page
-      const prevFileIndex = currentFileIndex - 1;
-      const data = await fetchData(currentCategory, 1, poemsPerPage, prevFileIndex);
-      setCurrentFileIndex(prevFileIndex);
-      setCurrentPage(Math.ceil(data.poems.length / poemsPerPage));
-    }
+  const goToNextPage = () => {
+  if (poetryData.length === poemsPerPage) {
+    setCurrentPage(prevPage => prevPage + 1);
+  }
+};
+
+  const goToPrevPage = () => {
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
 
   return (
@@ -165,8 +117,8 @@ function Home({ initialPoetryData, initialFileCount }) {
       </header>
 
       <nav className="poetry-navigation">
-        <a href="#quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="#tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
+        <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
+        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
         <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
