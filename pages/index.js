@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import PoemsContainer from './PoemsContainer';
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -194,3 +195,4 @@ function Home({ initialPoetryData }) {
 }
 
 export default Home;
+ReactDOM.render(<App />, document.getElementById('root'));
