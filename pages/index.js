@@ -3,10 +3,12 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
+// 假设您的 NEXT_PUBLIC_API_BASE_URL 是在 .env.local 或类似文件中定义的
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 async function fetchData(category, page, perPage, fileIndex, baseUrl, searchKeyword) {
   let url = `${baseUrl}/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
   
-  // 添加搜索关键词到请求 URL，如果存在的话
   if (searchKeyword) {
     url += `&searchKeyword=${encodeURIComponent(searchKeyword)}`;
   }
@@ -20,7 +22,7 @@ async function fetchData(category, page, perPage, fileIndex, baseUrl, searchKeyw
 }
 
 async function fetchFileCount(category) {
-  const url = `/api/filecount?category=${category}`;
+  const url = `${baseUrl}/api/filecount?category=${category}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -29,7 +31,6 @@ async function fetchFileCount(category) {
 }
 
 export async function getStaticProps() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   // 确保baseUrl是定义好的，否则在构建时可能会遇到问题
   if (!baseUrl) {
     console.error('NEXT_PUBLIC_API_BASE_URL environment variable is not set');
@@ -66,7 +67,7 @@ function Home({ initialPoetryData, initialFileCount }) {
 
     const fetchAndSetPoetryData = async () => {
       try {
-        const data = await fetchData(currentCategory, currentPage, poemsPerPage, currentFileIndex);
+        const data = await fetchData(currentCategory, currentPage, poemsPerPage, currentFileIndex, baseUrl);
         if (!cancel) {
           setPoetryData(data.poems);
         }
@@ -101,11 +102,17 @@ function Home({ initialPoetryData, initialFileCount }) {
     setCurrentFileIndex(0);
   };
 
-const handleSearch = async (event) => {
-  event.preventDefault();
-  const data = await fetchData(currentCategory, currentPage, poemsPerPage, currentFileIndex, process.env.NEXT_PUBLIC_API_BASE_URL, searchKeyword);
-  setPoetryData(data.poems);
-};
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    try {
+      const data = await fetchData(currentCategory, 1, poemsPerPage, 0, baseUrl, searchKeyword);
+      setPoetryData(data.poems);
+      setCurrentPage(1);
+      setCurrentFileIndex(0);
+    } catch (error) {
+      console.error('Error performing search:', error);
+    }
+  };
   
   const goToNextPage = async () => {
     const nextPage = currentPage + 1;
