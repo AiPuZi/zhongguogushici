@@ -3,8 +3,8 @@ import Poem from './PoemsContainer';
 
 // 假设这是你的诗词文件路径列表
 const poemFiles = [
-  '/mengxue/poem1.json',
-  '/mengxue/poem2.json',
+  '/mengxue/poem3.json',
+  '/mengxue/poem4.json',
   // 更多文件路径...
 ];
 
