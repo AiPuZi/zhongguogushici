@@ -25,12 +25,16 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
+async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
+  const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
+  setNextPageData(data);
+}
+
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
-  // 更新这里的初始数据处理
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
@@ -48,28 +52,28 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [nextPageData, setNextPageData] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const poemsPerPage = 9;
 
   useEffect(() => {
-  let cancel = false;
-  const fetchDataAndSetPoetryData = async () => {
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-    if (!cancel) {
-      setPoetryData(data);
+    let cancel = false;
+    const fetchDataAndSetPoetryData = async () => {
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      if (!cancel) {
+        setPoetryData(data);
+        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+      }
+    };
+    if (currentCategory !== '') {
+      fetchDataAndSetPoetryData();
     }
-  };
-  
-  if (currentCategory !== '') {
-    fetchDataAndSetPoetryData();
-  }
-
-  return () => {
-    cancel = true;
-  };
-}, [currentCategory, currentPage, poemsPerPage, router.query.query]); // Make sure currentPage is in the dependency array
+    return () => {
+      cancel = true;
+    };
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -80,13 +84,17 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
+    preFetchNextPage(currentCategory, currentPage, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
   };
 
   const goToNextPage = () => {
-  if (poetryData.length === poemsPerPage) {
-    setCurrentPage(prevPage => prevPage + 1);
-  }
-};
+    if (nextPageData.length > 0) {
+      setPoetryData(nextPageData);
+      setCurrentPage(prevPage => prevPage + 1);
+      setNextPageData([]);
+      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+    }
+  };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
