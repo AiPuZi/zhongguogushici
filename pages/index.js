@@ -53,16 +53,23 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-     const fetchDataAndSetPoetryData = async () => {
-       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-       setPoetryData(data);
-     };
-     
-     if (currentCategory !== '') {
-       fetchDataAndSetPoetryData();
-     }
-   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      setPoetryData(data);
+    }
+  };
+  
+  if (currentCategory !== '') {
+    fetchDataAndSetPoetryData();
+  }
+
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
