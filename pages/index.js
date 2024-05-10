@@ -95,15 +95,16 @@ function Home({ initialPoetryData }) {
     preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
   };
 
-  const goToNextPage = async () => {
+  const goToNextPage = () => {
   if (nextPageData.length > 0) {
-    // 先提取下一页数据，然后再更新当前页面数据和状态
-    const data = nextPageData;
-    setPoetryData(data);
-    setCurrentPage(prevPage => prevPage + 1);
+    // 更新页面数据为预取的数据
+    setPoetryData(nextPageData);
+    // 增加当前页的页数
+    setCurrentPage((prevPage) => prevPage + 1);
+    // 清空nextPageData状态，以便下一次的预取操作
     setNextPageData([]);
-    // 在更新状态后，立即预取下一页数据
-    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+    // 立即预取下一页的数据
+    preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
   }
 };
 
