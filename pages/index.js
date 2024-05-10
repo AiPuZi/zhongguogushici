@@ -25,12 +25,16 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
+async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
+  const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
+  setNextPageData(data);
+}
+
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
-  // 更新这里的初始数据处理
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
@@ -48,9 +52,9 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
+  const [nextPageData, setNextPageData] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页数据
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -60,6 +64,9 @@ function Home({ initialPoetryData }) {
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       if (!cancel) {
         setPoetryData(data);
+        if (currentPage === 0) {
+          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+        }
       }
     };
 
@@ -70,40 +77,31 @@ function Home({ initialPoetryData }) {
     return () => {
       cancel = true;
     };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query]); // Make sure currentPage is in the dependency array
-
-  // 数据预取功能
-  useEffect(() => {
-    const fetchNextPageData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, keyword);
-      setNextPageData(data); // 将下一页数据存储在状态中
-    };
-
-    if (currentCategory !== '') {
-      fetchNextPageData();
-    }
   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
-  const handleCategoryChange = (category, event) => {
+  const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
+    setCurrentPage(0);
+    const data = await fetchData(category, 0, poemsPerPage, '');
+    setPoetryData(data);
+    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
+    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
   };
 
   const goToNextPage = () => {
-    if (nextPageData) {
-      setPoetryData(nextPageData); // 从数据缓冲区中取出数据并显示在页面上
-      setNextPageData(null); // 清空缓冲区
-      setCurrentPage(prevPage => prevPage + 1); // 更新当前页数
-    } else {
-      setCurrentPage(prevPage => prevPage + 1); // 如果没有缓存的数据，直接更新当前页数
-    }
+    if (nextPageData.length > 0) {
+      setPoetryData(nextPageData);
+      setCurrentPage(prevPage => prevPage + 1);
+      setNextPageData([]);
+      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+      }
   };
 
   const goToPrevPage = () => {
@@ -171,7 +169,7 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
       </div>
 
       <div className="attribution">
