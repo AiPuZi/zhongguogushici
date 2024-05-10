@@ -96,13 +96,18 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = () => {
-    if (nextPageData.length > 0) {
-      setPoetryData(nextPageData);
-      setCurrentPage(prevPage => prevPage + 1);
-      setNextPageData([]);
-      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
-      }
-  };
+  setPoetryData(nextPageData);
+  setCurrentPage(prevPage => prevPage + 1);
+  // 预加载下一页数据
+  preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+};
+
+  useEffect(() => {
+  // 当currentPage变更后，立刻预加载下一页的数据
+  if (currentPage > 0) {
+    preFetchNextPage(currentCategory, currentPage, poemsPerPage, searchKeyword, setNextPageData);
+  }
+}, [currentPage]);
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
