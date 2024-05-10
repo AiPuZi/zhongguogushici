@@ -3,8 +3,9 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage, fileIndex) {
-  const url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
+async function fetchData(category, page, perPage, fileIndex, baseUrl) {
+  // 使用传入的 baseUrl 来构造完整的 URL
+  const url = `${baseUrl}/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
