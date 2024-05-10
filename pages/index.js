@@ -3,13 +3,19 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 
-async function fetchData(category, page, perPage, fileIndex, baseUrl) {
-  // 使用传入的 baseUrl 来构造完整的 URL
-  const url = `${baseUrl}/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
+async function fetchData(category, page, perPage, fileIndex, baseUrl, searchKeyword) {
+  let url = `${baseUrl}/api/poems?category=${category}&page=${page}&perPage=${perPage}&fileIndex=${fileIndex}`;
+  
+  // 添加搜索关键词到请求 URL，如果存在的话
+  if (searchKeyword) {
+    url += `&searchKeyword=${encodeURIComponent(searchKeyword)}`;
+  }
+
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+  
   return await response.json();
 }
 
@@ -96,10 +102,10 @@ function Home({ initialPoetryData, initialFileCount }) {
   };
 
 const handleSearch = async (event) => {
-    event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
-    setPoetryData(data);
-  };
+  event.preventDefault();
+  const data = await fetchData(currentCategory, currentPage, poemsPerPage, currentFileIndex, process.env.NEXT_PUBLIC_API_BASE_URL, searchKeyword);
+  setPoetryData(data.poems);
+};
   
   const goToNextPage = async () => {
     const nextPage = currentPage + 1;
