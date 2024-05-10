@@ -53,6 +53,7 @@ function Home({ initialPoetryData, initialFileCount }) {
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [fileCount, setFileCount] = useState(initialFileCount);
   const poemsPerPage = 9;
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
     let cancel = false;
@@ -94,6 +95,12 @@ function Home({ initialPoetryData, initialFileCount }) {
     setCurrentFileIndex(0);
   };
 
+const handleSearch = async (event) => {
+    event.preventDefault();
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    setPoetryData(data);
+  };
+  
   const goToNextPage = async () => {
     const nextPage = currentPage + 1;
     const data = await fetchData(currentCategory, nextPage, poemsPerPage, currentFileIndex);
