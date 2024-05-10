@@ -22,7 +22,19 @@ async function fetchFileCount(category) {
 }
 
 export async function getStaticProps() {
-  const initialData = await fetchData('quantangshi', 1, 9, 0);
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // 确保baseUrl是定义好的，否则在构建时可能会遇到问题
+  if (!baseUrl) {
+    console.error('NEXT_PUBLIC_API_BASE_URL environment variable is not set');
+    return {
+      props: {
+        initialPoetryData: [],
+        initialFileCount: 0,
+      },
+    };
+  }
+
+  const initialData = await fetchData('quantangshi', 1, 9, 0, baseUrl);
   return {
     props: {
       initialPoetryData: initialData.poems,
