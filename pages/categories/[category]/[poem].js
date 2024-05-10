@@ -6,22 +6,22 @@ import Head from 'next/head';
 // 这个函数决定了哪些动态路径将被预渲染
 export async function getStaticPaths() {
   const categoriesDir = path.join(process.cwd(), 'public');
-  // 检查是否为目录
-    if (fs.statSync(categoryPath).isDirectory()) {
   const categoryDirs = fs.readdirSync(categoriesDir);
 
   let paths = [];
 
   categoryDirs.forEach((category) => {
     const categoryPath = path.join(categoriesDir, category);
-    const poemFiles = fs.readdirSync(categoryPath);
+    // 检查是否为目录
+    if (fs.statSync(categoryPath).isDirectory()) {
+      const poemFiles = fs.readdirSync(categoryPath);
 
-    poemFiles.forEach((file) => {
-      const poem = file.replace(/\.json$/, ''); // 移除 ".json" 后缀
-      paths.push({
-        params: { category, poem },
+      poemFiles.forEach((file) => {
+        const poem = file.replace(/\.json$/, ''); // 移除 ".json" 后缀
+        paths.push({
+          params: { category, poem },
+        });
       });
-    });
     }
   });
 
