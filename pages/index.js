@@ -25,16 +25,12 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
-async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
-  const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
-  setNextPageData(data);
-}
-
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
+  // 更新这里的初始数据处理
   const poetryData = Array.isArray(data) ? data.map(item => ({
     ...item,
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
@@ -52,9 +48,9 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [nextPageData, setNextPageData] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [nextPageData, setNextPageData] = useState(null); // 新增状态，用于存储下一页数据
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -64,16 +60,17 @@ function Home({ initialPoetryData }) {
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       if (!cancel) {
         setPoetryData(data);
-        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
       }
     };
+
     if (currentCategory !== '') {
       fetchDataAndSetPoetryData();
     }
+
     return () => {
       cancel = true;
     };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query]); // Make sure currentPage is in the dependency array
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
@@ -84,21 +81,32 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
     setPoetryData(data);
-    preFetchNextPage(currentCategory, currentPage, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
   };
 
   const goToNextPage = () => {
-    if (nextPageData.length > 0) {
-      setPoetryData(nextPageData);
+    if (nextPageData) {
+      setPoetryData(nextPageData); // 从数据缓冲区中取出数据并显示在页面上
+      setNextPageData(null); // 清空缓冲区
+    } else {
       setCurrentPage(prevPage => prevPage + 1);
-      setNextPageData([]);
-      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
     }
   };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
+
+  useEffect(() => {
+    const fetchNextPageData = async () => {
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, keyword);
+      setNextPageData(data); // 预取下一页数据并存储到缓冲区
+    };
+
+    if (currentCategory !== '') {
+      fetchNextPageData();
+    }
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
   return (
     <>
@@ -143,20 +151,20 @@ function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-  {Array.isArray(poetryData) && poetryData.map((poem, index) => (
-    <div key={index} className="poem">
-      <Poem
-        title={poem.title}
-        author={poem.author}
-        content={poem.content}
-        chapter={poem.chapter}
-        section={poem.section}
-        comments={poem.comments}
-        rhythmic={poem.rhythmic}
-      />
-    </div>
-  ))}
-</main>
+        {Array.isArray(poetryData) && poetryData.map((poem, index) => (
+          <div key={index} className="poem">
+            <Poem
+              title={poem.title}
+              author={poem.author}
+              content={poem.content}
+              chapter={poem.chapter}
+              section={poem.section}
+              comments={poem.comments}
+              rhythmic={poem.rhythmic}
+            />
+          </div>
+        ))}
+      </main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
