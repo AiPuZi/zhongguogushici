@@ -64,27 +64,35 @@ function Home({ initialPoetryData }) {
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       if (!cancel) {
         setPoetryData(data);
-        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+        if (currentPage === 0) {
+          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+        }
       }
     };
+
     if (currentCategory !== '') {
       fetchDataAndSetPoetryData();
     }
+
     return () => {
       cancel = true;
     };
   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
-  const handleCategoryChange = (category, event) => {
+  const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
+    setCurrentPage(0);
+    const data = await fetchData(category, 0, poemsPerPage, '');
+    setPoetryData(data);
+    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, searchKeyword);
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
-    preFetchNextPage(currentCategory, currentPage, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
   };
 
   const goToNextPage = () => {
@@ -92,8 +100,8 @@ function Home({ initialPoetryData }) {
       setPoetryData(nextPageData);
       setCurrentPage(prevPage => prevPage + 1);
       setNextPageData([]);
-      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
-    }
+      preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, searchKeyword, setNextPageData);
+      }
   };
 
   const goToPrevPage = () => {
