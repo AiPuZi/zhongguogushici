@@ -117,7 +117,7 @@ function Home({ initialPoetryData }) {
     <>
       <Head>
         <title>古诗词网</title>
-        <link rel="icon" type="image/png" href="/logo.png" />
+        // <link rel="icon" type="image/png" href="/logo.png" />
       </Head>
 
       <header>
