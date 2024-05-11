@@ -1,6 +1,28 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import path from 'path';
 
+// 内联 Promise.allLimit 函数
+async function Promise.allLimit(arr, limit) {
+  let i = 0;
+  const result = [];
+  const executing = [];
+
+  const execute = async () => {
+    if (i < arr.length) {
+      const p = arr[i++]();
+      const e = p.then(result => result);
+      result.push(e);
+      const r = e.then(() => executing.splice(executing.indexOf(r), 1));
+      executing.push(r);
+      await Promise.race(executing);
+      return execute();
+    }
+  };
+
+  await Promise.all([...Array(limit)].map(() => execute()));
+  return Promise.all(result);
+}
+
 export default async function handler(req, res) {
   const { query } = req.query;
 
@@ -39,7 +61,7 @@ async function searchCategory(category, keyword) {
   const validFiles = files.filter(file => file.endsWith('.json'));
   const tasks = validFiles.map(file => searchFile(path.join(categoryDirPath, file), keyword));
   
-  // 通过 Promise.all() 并行处理每个文件的搜索
+  // 通过 Promise.allLimit() 并行处理每个文件的搜索
   const matchingPoems = await Promise.allLimit(tasks, 10); // 限制并行处理的任务数量为10
 
   return matchingPoems;
@@ -76,26 +98,4 @@ function isStringMatch(value, keyword) {
 
 function isArrayMatch(value, keyword) {
   return Array.isArray(value) && value.some(line => isStringMatch(line, keyword));
-}
-
-// Promise.all 的限制版本，控制并行处理的任务数量
-async function Promise.allLimit(arr, limit) {
-  let i = 0;
-  const result = [];
-  const executing = [];
-
-  const execute = async () => {
-    if (i < arr.length) {
-      const p = arr[i++]();
-      const e = p.then(result => result);
-      result.push(e);
-      const r = e.then(() => executing.splice(executing.indexOf(e), 1));
-      executing.push(r);
-      await Promise.race(executing);
-      return execute();
-    }
-  };
-
-  await Promise.all([...Array(limit)].map(() => execute()));
-  return Promise.all(result);
 }
