@@ -89,11 +89,16 @@ function Home({ initialPoetryData }) {
   };
 
   const handleSearch = async (event) => {
-    event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
-    setPoetryData(data);
+  event.preventDefault();
+  const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
+  setPoetryData(data);
+  if (data.length < poemsPerPage) {
+    // 如果搜索结果不足一页，则禁用下一页按钮
+    setNextPageData([]);
+  } else {
     preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
-  };
+  }
+};
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
