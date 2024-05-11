@@ -11,7 +11,7 @@ export default function Poem({ title, author, content, chapter, source, rhythmic
       ))}
       {subtitle && <h4>{subtitle}</h4>}
       {title && <h3>{title}</h3>}
-      {author && <h4>{author}</h4>}
+      {author && !paragraphs && <h4>{author}</h4>}
       {source && <h4>{source}</h4>}
       {rhythmic && <h3>{rhythmic}</h3>}
       {content && (
