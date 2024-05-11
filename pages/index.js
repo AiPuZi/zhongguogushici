@@ -158,6 +158,7 @@ function Home({ initialPoetryData }) {
         <a href="/mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
         <a href="/nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
         <a href="/youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
+        <a href="/caocaoshiji" onClick={(e) => handleCategoryChange('caocaoshiji', e)}>曹操诗集</a>
       </nav>
       
 <main id="poetry-content">
