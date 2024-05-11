@@ -55,7 +55,6 @@ function Home({ initialPoetryData }) {
   const [nextPageData, setNextPageData] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0); // 添加totalPages状态变量
   const poemsPerPage = 9;
 
   useEffect(() => {
@@ -66,11 +65,8 @@ function Home({ initialPoetryData }) {
       if (!cancel) {
         setPoetryData(data);
         if (currentPage === 0) {
-          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
+          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
         }
-        // 更新总页数
-        const total = await getTotalPages(currentCategory, keyword);
-        setTotalPages(total);
       }
     };
 
@@ -89,42 +85,37 @@ function Home({ initialPoetryData }) {
     setCurrentPage(0);
     const data = await fetchData(category, 0, poemsPerPage, '');
     setPoetryData(data);
-    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData);
-    const total = await getTotalPages(category, '');
-    setTotalPages(total);
+    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
   };
 
   const handleSearch = async (event) => {
-    event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
-    setPoetryData(data);
-    if (data.length < poemsPerPage) {
-      setNextPageData([]);
-    } else {
-      preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData);
-    }
-    const total = await getTotalPages(currentCategory, searchKeyword); // 更新总页数
-    setTotalPages(total);
-  };
+  event.preventDefault();
+  const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
+  setPoetryData(data);
+  if (data.length < poemsPerPage) {
+    // 如果搜索结果不足一页，则禁用下一页按钮
+    setNextPageData([]);
+  } else {
+    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+  }
+};
 
   const goToNextPage = async () => {
-    if (nextPageData.length > 0) {
-      setCurrentPage(prevPage => prevPage + 1);
-      setPoetryData(nextPageData);
-      setNextPageData([]);
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
-    }
-  };
+  if (nextPageData.length > 0) {
+    // 增加当前页的页数
+    setCurrentPage((prevPage) => prevPage + 1);
+    // 更新页面数据为预取的数据
+    setPoetryData(nextPageData);
+    // 清空nextPageData状态，以便下一次的预取操作
+    setNextPageData([]);
+    // 预取下一页的数据
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+  }
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
-  };
-
-  const getTotalPages = async (category, keyword) => {
-    const data = await fetchData(category, 0, poemsPerPage, keyword);
-    const total = Math.ceil(data.length / poemsPerPage);
-    return total;
   };
 
   return (
@@ -188,7 +179,7 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={currentPage === totalPages - 1}>下一页</button>
+        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
       </div>
 
       <div className="attribution">
