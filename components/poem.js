@@ -1,5 +1,5 @@
 export default function Poem({ title, author, content, chapter, section, comments = [], rhythmic }) {
-  const subtitle = chapter || section; // 定义副标题
+  const subtitle = chapter ? `${chapter} - ${section}` : section; // 定义副标题
   const commentElements = comments.map((comment, index) => (
     <p key={index}>{comment}</p>
   ));
