@@ -21,8 +21,8 @@ export default async function handler(req, res) {
 async function searchPoems(keyword) {
   const categories = await readdir(path.join(process.cwd(), 'public'));
 
-  // 并行处理搜索操作
-  const matchingPoems = await Promise.all(categories.map(category => searchCategory(category, keyword)));
+  // 通过 Promise.all() 并行处理每个文件的搜索
+  const matchingPoems = await Promise.all(categories.flatMap(category => searchCategory(category, keyword)));
 
   return matchingPoems.flat();
 }
@@ -37,27 +37,24 @@ async function searchCategory(category, keyword) {
 
   const files = await readdir(categoryDirPath);
   const validFiles = files.filter(file => file.endsWith('.json'));
-  const poems = [];
+  const tasks = validFiles.map(file => searchFile(path.join(categoryDirPath, file), keyword));
+  
+  // 通过 Promise.all() 并行处理每个文件的搜索
+  const matchingPoems = await Promise.all(tasks);
 
-  for (const file of validFiles) {
-    const filePath = path.join(categoryDirPath, file);
-    const fileContent = await readFile(filePath, 'utf8');
-    const jsonContent = JSON.parse(fileContent);
+  return matchingPoems;
+}
 
-    if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
-      console.error(`File ${filePath} does not contain an array or is empty.`);
-      continue;
-    }
+async function searchFile(filePath, keyword) {
+  const fileContent = await readFile(filePath, 'utf8');
+  const jsonContent = JSON.parse(fileContent);
 
-    for (const item of jsonContent) {
-      if (poemsPushIfMatched(item, keyword)) {
-        // 如果找到匹配项，直接推送到结果数组中
-        poems.push(item);
-      }
-    }
+  if (!Array.isArray(jsonContent) || jsonContent.length === 0) {
+    console.error(`File ${filePath} does not contain an array or is empty.`);
+    return [];
   }
 
-  return poems;
+  return jsonContent.filter(item => poemsPushIfMatched(item, keyword));
 }
 
 function poemsPushIfMatched(item, keyword) {
