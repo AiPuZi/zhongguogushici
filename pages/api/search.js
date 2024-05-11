@@ -21,6 +21,11 @@ const searchPoems = async (keyword) => {
 
   for (const category of categories) {
     const categoryDirPath = path.join(process.cwd(), 'public', category);
+     // 使用 stat 检查是否为目录
+    const categoryStat = await stat(categoryDirPath);
+    if (!categoryStat.isDirectory()) {
+      continue; // 如果不是目录，则跳过当前循环
+    }
     const files = await readdir(categoryDirPath);
     const validFiles = files.filter(file => file.endsWith('.json'));
 
