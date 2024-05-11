@@ -88,15 +88,18 @@ function Home({ initialPoetryData }) {
     preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
   };
 
-  const handleSearch = async (event) => {
+ const handleSearch = async (event) => {
   event.preventDefault();
   const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
   setPoetryData(data);
+  
+  const totalPageCount = Math.ceil(data.length / poemsPerPage);
+  setTotalPages(totalPageCount);
+
   if (data.length < poemsPerPage) {
-    // 如果搜索结果不足一页，则禁用下一页按钮
     setNextPageData([]);
   } else {
-    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData);
   }
 };
 
@@ -179,7 +182,7 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 0}>上一页</button>
-        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
+        <button onClick={goToNextPage} disabled={currentPage === totalPages - 1}>下一页</button>
       </div>
 
       <div className="attribution">
