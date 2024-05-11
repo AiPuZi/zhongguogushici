@@ -89,7 +89,7 @@ async function Promise.allLimit(arr, limit) {
       const p = arr[i++]();
       const e = p.then(result => result);
       result.push(e);
-      const r = e.then(() => executing.splice(executing.indexOf(r), 1));
+      const r = e.then(() => executing.splice(executing.indexOf(e), 1));
       executing.push(r);
       await Promise.race(executing);
       return execute();
