@@ -229,10 +229,9 @@ footer span:first-child {
 }
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
-@media (max-width: 600px) {
-  .logo, .slogan {
-    float: none;
-    display: block;
-    text-align: center;
-  }
+@media screen and (max-width: 767px) {
+    .logo, .slogan {
+        display: block; /* 在小屏幕上，变为块级元素 */
+        margin: 5px auto; /* 居中显示 */
+    }
 }
