@@ -229,8 +229,10 @@ footer span:first-child {
 }
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
-@media screen and (max-width: 767px) {
-    .poem {
-        flex-basis: 100%; /* 在小屏幕上，每个诗词占据整行 */
-    }
+@media (max-width: 600px) {
+  .logo, .slogan {
+    float: none;
+    display: block;
+    text-align: center;
+  }
 }
