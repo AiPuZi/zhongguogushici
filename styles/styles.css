@@ -230,8 +230,34 @@ footer span:first-child {
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
-    .logo, .slogan {
-        display: block; /* 在小屏幕上，变为块级元素 */
-        margin: 5px auto; /* 居中显示 */
+    header {
+        /* 改为竖直排列 */
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .logo {
+        /* logo保持在左侧，取消之前的绝对定位 */
+        position: static;
+        transform: none;
+        order: 1; /* 确保logo显示在最上面 */
+        width: 100%; /* 宽度100%，避免slogan影响布局 */
+        text-align: left; /* 文本左对齐 */
+    }
+
+    .slogan {
+        /* slogan保持在右侧 */
+        position: static;
+        transform: none;
+        order: 2; /* 确保slogan显示在logo下面 */
+        width: 100%; /* 宽度100%，避免logo影响布局 */
+        text-align: right; /* 文本右对齐 */
+    }
+
+    .search-box {
+        order: 3; /* 确保搜索框显示在slogan下面 */
+        width: 100%; /* 宽度100% */
+        text-align: center; /* 搜索框居中显示 */
+        padding-top: 10px; /* 与slogan有一定间距 */
     }
 }
