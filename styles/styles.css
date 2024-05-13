@@ -41,7 +41,7 @@ main {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between; /* 平均分布每行的诗词 */
+    justify-content: flex-start; /* 平均分布每行的诗词 */
 }
 
 /* 古诗容器样式 */
