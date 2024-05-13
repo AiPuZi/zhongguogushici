@@ -231,15 +231,12 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     header {
-        flex-direction: column; /* 在小屏幕上，垂直布局 */
-        align-items: flex-start; /* 左对齐 */
+        grid-template-columns: 1fr; /* 在小屏幕上，仅有一列 */
+        grid-template-rows: auto auto; /* 自动调整行高 */
+        justify-items: center; /* 水平居中 */
     }
-    
-    .logo, .slogan {
-        margin: 5px 0; /* 调整logo和slogan的上下间距 */
-    }
-    
+
     .slogan {
-        margin-left: 0; /* 在小屏幕上，重置margin-left */
+        text-align: center; /* 在小屏幕上居中对齐slogan */
     }
 }
