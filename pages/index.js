@@ -7,6 +7,9 @@ import OpenCC from 'opencc-js';
 
 // 获取转换函数
 const t2s = OpenCC['t2s']();  // 繁体转简体
+// 使用转换函数
+const traditionalText = "開放中文轉換";
+const simplifiedText = t2s(traditionalText);
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
