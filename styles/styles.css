@@ -60,7 +60,7 @@ main {
 
 /* 单个古诗样式 */
 .poem {
-    flex-basis: calc(33.333% - 20px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex-basis: calc(33.333% - 7px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
