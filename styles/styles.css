@@ -231,30 +231,35 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     header {
-        /* 如果header使用了flex布局，确保其在小屏幕上改为垂直排列 */
-        flex-direction: column;
-        align-items: flex-start; /* 确保子元素从头开始排列 */
+        display: flex;
+        flex-direction: column; /* 将header内的元素垂直排列 */
+        align-items: center; /* 将子元素居中对齐 */
     }
 
     .logo {
-        /* logo将在顶部左对齐显示 */
-        text-align: left;
-        width: 100%; /* 宽度调整为100%，确保占满整行 */
-        order: 1; /* 确保logo在搜索框上方 */
+        align-self: flex-start; /* logo靠左显示 */
+        width: 100%; /* 宽度100%，确保占满整行 */
     }
 
     .slogan {
-        /* slogan将在logo下方右对齐显示 */
-        text-align: right;
-        width: 100%; /* 宽度调整为100%，确保占满整行 */
-        order: 2; /* 确保slogan在搜索框上方 */
+        align-self: flex-end; /* slogan靠右显示 */
+        width: 100%; /* 宽度100%，确保占满整行 */
     }
 
     .search-box {
-        /* 搜索框将显示在logo和slogan的下方，并居中 */
-        width: 100%; /* 宽度调整为100%，确保占满整行 */
-        text-align: center; /* 文本居中对齐 */
-        order: 3; /* 确保搜索框在slogan下方 */
-        padding: 10px 0; /* 添加一些上下内边距 */
+        width: 100%; /* 宽度100%，确保占满整行 */
+        order: 3; /* 确保搜索框显示在最下方 */
+        margin-top: 10px; /* 在搜索框上方留出一些空间 */
+    }
+
+    .search-container {
+        width: 100%; /* 调整搜索容器的宽度为100% */
+        text-align: center; /* 确保搜索框内的元素居中显示 */
+    }
+
+    .search-container input[type="text"], 
+    .search-container button {
+        margin: 0 auto; /* 自动外边距实现居中 */
+        display: block; /* 将输入框和按钮设置为块级元素 */
     }
 }
