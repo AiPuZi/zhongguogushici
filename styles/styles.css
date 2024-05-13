@@ -82,7 +82,7 @@ main {
 }
 
 /* 最后一个古诗不需要右边距 */
-.poem-row:last-child .poem {
+.poem-row:last-child .poem:last-child {
     margin-right: auto;
 }
 
