@@ -52,10 +52,10 @@ main {
 }
 
 /* 单行古诗样式 */
-.poem-row {
-    display: flex;
-    justify-content: space-between; /* 从行的起始端开始布置子元素 */
-    flex-wrap: wrap; /* 允许项目换行 */
+.poem-row:after {
+    content: "";
+    flex: auto;
+    flex-basis: calc(33.333% - 40px);
 }
 
 /* 单个古诗样式 */
