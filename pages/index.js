@@ -3,6 +3,10 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import OpenCC from 'opencc-js';
+
+// 获取转换函数
+const t2s = OpenCC['t2s']();  // 繁体转简体
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -63,7 +67,18 @@ function Home({ initialPoetryData }) {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       if (!cancel) {
-        setPoetryData(data);
+        // 进行繁体转简体转换
+        const simplifiedData = data.map(item => ({
+          ...item,
+          title: t2s(item.title),
+          author: t2s(item.author),
+          chapter: t2s(item.chapter),
+          section: t2s(item.section),
+          content: item.content.map(paragraph => t2s(paragraph)),
+          comments: item.comments.map(comment => t2s(comment)),
+          rhythmic: t2s(item.rhythmic)
+        }));
+        setPoetryData(simplifiedData);
         if (currentPage === 0) {
           preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
         }
@@ -89,35 +104,35 @@ function Home({ initialPoetryData }) {
   };
 
   const handleSearch = async (event) => {
-  event.preventDefault();
-  const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
-  setPoetryData(data);
-  if (data.length < poemsPerPage) {
-    // 如果搜索结果不足一页，则禁用下一页按钮
-    setNextPageData([]);
-  } else {
-    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
-  }
-};
+    event.preventDefault();
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
+    setPoetryData(data);
+    if (data.length < poemsPerPage) {
+      // 如果搜索结果不足一页，则禁用下一页按钮
+      setNextPageData([]);
+    } else {
+      preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+    }
+  };
 
   const goToNextPage = async () => {
-  if (nextPageData.length > 0) {
-    // 增加当前页的页数
-    setCurrentPage((prevPage) => prevPage + 1);
-    // 更新页面数据为预取的数据
-    setPoetryData(nextPageData);
-    // 清空nextPageData状态，以便下一次的预取操作
-    setNextPageData([]);
-    // 预取下一页的数据
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
-  }
-};
+    if (nextPageData.length > 0) {
+      // 增加当前页的页数
+      setCurrentPage((prevPage) => prevPage + 1);
+      // 更新页面数据为预取的数据
+      setPoetryData(nextPageData);
+      // 清空nextPageData状态，以便下一次的预取操作
+      setNextPageData([]);
+      // 预取下一页的数据
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+    }
+  };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
-  
+
   return (
     <>
       <Head>
@@ -144,7 +159,7 @@ function Home({ initialPoetryData }) {
 
       <nav className="poetry-navigation">
         <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a> 
+        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
         <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
         <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
@@ -160,8 +175,8 @@ function Home({ initialPoetryData }) {
         <a href="/youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
         <a href="/caocaoshiji" onClick={(e) => handleCategoryChange('caocaoshiji', e)}>曹操诗集</a>
       </nav>
-      
-<main id="poetry-content">
+
+      <main id="poetry-content">
         {Array.isArray(poetryData) && poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
@@ -184,10 +199,10 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">
-        本站收录诗词数十万首，难免出现错漏。网站在使用上亦存在一些小问题，详情请至留言板查看或反馈。    
+        本站收录诗词数十万首，难免出现错漏。网站在使用上亦存在一些小问题，详情请至留言板查看或反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-      
+
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
