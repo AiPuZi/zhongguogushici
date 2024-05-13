@@ -228,7 +228,22 @@ footer span:first-child {
 }
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
+/* 适应屏幕大小 */
 @media screen and (max-width: 767px) {
+    .poem {
+        flex-basis: 100%;
+        margin: 7px 3px; /* 修改后的边距 */
+        margin-bottom: 15px;
+    }
+
+    .poem-row {
+        flex-direction: column;
+    }
+
+    main {
+        margin: 20px 10px; /* 修改后的边距 */
+    }
+
     header {
         /* 如果header使用了flex布局，确保其在小屏幕上改为垂直排列 */
         flex-direction: column;
@@ -247,6 +262,12 @@ footer span:first-child {
         text-align: right;
         width: 100%; /* 宽度调整为100%，确保占满整行 */
         order: 2; /* 确保slogan在搜索框上方 */
+    }
+
+    .search-container {
+        right: 10px; /* 调整右边距以适应小屏幕 */
+        left: auto; /* 确保不会影响到左边距 */
+        width: auto; /* 重置宽度，防止影响到居中 */
     }
 
     .search-box {
