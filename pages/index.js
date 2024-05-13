@@ -7,7 +7,6 @@ import * as OpenCC from 'opencc-js';
 
 // 使用转换函数
 const traditionalText = "開放中文轉換";
-const simplifiedText = OpenCC.t2s(traditionalText); // 使用 OpenCC.t2s 进行繁简转换
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -68,16 +67,18 @@ function Home({ initialPoetryData }) {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
       const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
       if (!cancel) {
+        // 创建繁简转换器
+        const converter = await OpenCC.Converter({ from: 't', to: 's' });
         // 进行繁体转简体转换
         const simplifiedData = data.map(item => ({
           ...item,
-          title: OpenCC.t2s(item.title), // 使用 OpenCC.t2s 进行繁简转换
-          author: OpenCC.t2s(item.author), // 使用 OpenCC.t2s 进行繁简转换
-          chapter: OpenCC.t2s(item.chapter), // 使用 OpenCC.t2s 进行繁简转换
-          section: OpenCC.t2s(item.section), // 使用 OpenCC.t2s 进行繁简转换
-          content: item.content.map(paragraph => OpenCC.t2s(paragraph)), // 使用 OpenCC.t2s 进行繁简转换
-          comments: item.comments.map(comment => OpenCC.t2s(comment)), // 使用 OpenCC.t2s 进行繁简转换
-          rhythmic: OpenCC.t2s(item.rhythmic) // 使用 OpenCC.t2s 进行繁简转换
+          title: await converter(item.title),
+          author: await converter(item.author),
+          chapter: await converter(item.chapter),
+          section: await converter(item.section),
+          content: await Promise.all(item.content.map(paragraph => converter(paragraph))),
+          comments: await Promise.all(item.comments.map(comment => converter(comment))),
+          rhythmic: await converter(item.rhythmic)
         }));
         setPoetryData(simplifiedData);
         if (currentPage === 0) {
