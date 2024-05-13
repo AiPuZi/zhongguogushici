@@ -100,21 +100,31 @@ function Home({ initialPoetryData }) {
   }
 };
 
-  const goToNextPage = () => {
+  const goToNextPage = async () => {
   const nextPage = currentPage + 1;
-  // 假设所有诗词数据已经在前端可用，存储在allPoetryData变量中
-  const nextPageData = allPoetryData.slice(nextPage * poemsPerPage, (nextPage + 1) * poemsPerPage);
-  setPoetryData(nextPageData);
-  setCurrentPage(nextPage);
+  try {
+    const nextData = await fetchData(currentCategory, nextPage, poemsPerPage, searchKeyword);
+    if (nextData.length > 0) {
+      setPoetryData(nextData);
+      setCurrentPage(nextPage);
+    }
+  } catch (error) {
+    console.error('Failed to fetch next page data:', error);
+  }
 };
 
-const goToPrevPage = () => {
+const goToPrevPage = async () => {
   if (currentPage > 0) {
     const prevPage = currentPage - 1;
-    // 同上，从已有的数据中获取前一页的内容
-    const prevPageData = allPoetryData.slice(prevPage * poemsPerPage, (prevPage + 1) * poemsPerPage);
-    setPoetryData(prevPageData);
-    setCurrentPage(prevPage);
+    try {
+      const prevData = await fetchData(currentCategory, prevPage, poemsPerPage, searchKeyword);
+      if (prevData.length > 0) {
+        setPoetryData(prevData);
+        setCurrentPage(prevPage);
+      }
+    } catch (error) {
+      console.error('Failed to fetch previous page data:', error);
+    }
   }
 };
 
