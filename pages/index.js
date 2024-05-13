@@ -3,11 +3,7 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import * as OpenCC from 'opencc-js';
-
-// 使用转换函数
-const traditionalText = "開放中文轉換";
-const simplifiedText = OpenCC.t2s(traditionalText); // 使用 OpenCC.t2s 进行繁简转换
+import * as OpenCC from 'opencc-js'; // 导入opencc-js库
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -53,27 +49,6 @@ export async function getStaticProps() {
   };
 }
 
-async function fetchDataAndSetPoetryData(currentCategory, currentPage, poemsPerPage, keyword, setPoetryData, setNextPageData, router) {
-  const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-  // 获取繁简转换器
-  const converter = await OpenCC.Converter({ from: 't', to: 's' });
-  // 进行繁体转简体转换
-  const simplifiedData = data.map(item => ({
-    ...item,
-    title: converter(item.title), // 使用 OpenCC.t2s 进行繁简转换
-    author: converter(item.author), // 使用 OpenCC.t2s 进行繁简转换
-    chapter: converter(item.chapter), // 使用 OpenCC.t2s 进行繁简转换
-    section: converter(item.section), // 使用 OpenCC.t2s 进行繁简转换
-    content: item.content.map(paragraph => converter(paragraph)), // 使用 OpenCC.t2s 进行繁简转换
-    comments: item.comments.map(comment => converter(comment)), // 使用 OpenCC.t2s 进行繁简转换
-    rhythmic: converter(item.rhythmic) // 使用 OpenCC.t2s 进行繁简转换
-  }));
-  setPoetryData(simplifiedData);
-  if (currentPage === 0) {
-    preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
-  }
-}
-
 function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
@@ -87,7 +62,13 @@ function Home({ initialPoetryData }) {
     let cancel = false;
     const fetchDataAndSetPoetryData = async () => {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      fetchDataAndSetPoetryData(currentCategory, currentPage, poemsPerPage, keyword, setPoetryData, setNextPageData, router);
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      if (!cancel) {
+        setPoetryData(data);
+        if (currentPage === 0) {
+          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+        }
+      }
     };
 
     if (currentCategory !== '') {
@@ -103,28 +84,41 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     setCurrentCategory(category);
     setCurrentPage(0);
-    fetchDataAndSetPoetryData(category, 0, poemsPerPage, '', setPoetryData, setNextPageData, router); // Fetch data for the new category
+    const data = await fetchData(category, 0, poemsPerPage, '');
+    setPoetryData(data);
+    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    fetchDataAndSetPoetryData(currentCategory, 0, poemsPerPage, searchKeyword, setPoetryData, setNextPageData, router); // Fetch data for the search query
+    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
+    setPoetryData(data);
+    if (data.length < poemsPerPage) {
+      // 如果搜索结果不足一页，则禁用下一页按钮
+      setNextPageData([]);
+    } else {
+      preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+    }
   };
 
   const goToNextPage = async () => {
     if (nextPageData.length > 0) {
-      setCurrentPage((prevPage) => prevPage + 1); // Increment the current page number
-      setPoetryData(nextPageData); // Update the page data with pre-fetched data
-      setNextPageData([]); // Clear the nextPageData state for the next pre-fetch operation
+      // 增加当前页的页数
+      setCurrentPage((prevPage) => prevPage + 1);
+      // 更新页面数据为预取的数据
+      setPoetryData(nextPageData);
+      // 清空nextPageData状态，以便下一次的预取操作
+      setNextPageData([]);
+      // 预取下一页的数据
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for the next page
+      await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
     }
   };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
-
+  
   return (
     <>
       <Head>
@@ -151,7 +145,7 @@ function Home({ initialPoetryData }) {
 
       <nav className="poetry-navigation">
         <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a>
+        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a> 
         <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
         <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
         <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
@@ -167,7 +161,7 @@ function Home({ initialPoetryData }) {
         <a href="/youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
         <a href="/caocaoshiji" onClick={(e) => handleCategoryChange('caocaoshiji', e)}>曹操诗集</a>
       </nav>
-
+      
       <main id="poetry-content">
         {Array.isArray(poetryData) && poetryData.map((poem, index) => (
           <div key={index} className="poem">
@@ -191,10 +185,10 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">
-        本站收录诗词数十万首，难免出现错漏。网站在使用上亦存在一些小问题，详情请至留言板查看或反馈。
+        本站收录诗词数十万首，难免出现错漏。网站在使用上亦存在一些小问题，详情请至留言板查看或反馈。    
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
-
+      
       <footer>
         <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
