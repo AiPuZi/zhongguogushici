@@ -39,9 +39,6 @@ main {
     margin: 20px auto;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* 从容器的起始处开始排列子元素 */
 }
 
 /* 古诗容器样式 */
@@ -53,20 +50,20 @@ main {
 /* 单行古诗样式 */
 .poem-row {
     display: flex;
-    justify-content: flex-start; 
-    flex-wrap: wrap; /* 允许项目换行 */
-    margin-bottom: 20px; /* 为每一行添加底部间距 */
+    justify-content: flex-start; /* 从容器的开始处排列子元素，即诗词内容从左至右排列 */
+    margin-bottom: 20px;
 }
 
 /* 单个古诗样式 */
 .poem {
-    flex-basis: calc(33.333% - 20px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex-basis: calc(33.333% - 10px);
     text-align: center;
-    padding: 10px;
+    margin-right: 15px;
     box-sizing: border-box;
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* 设置背景颜色 */
+    padding: 10px; /* 根据需要调整内边距 */
+    border: 1px solid #ddd; /* 设置边框颜色 */
     border: none;
-    margin: 7px; 
 }
 
 .poem h3 {
@@ -82,8 +79,8 @@ main {
 }
 
 /* 最后一个古诗不需要右边距 */
-.poem-row:last-child .poem:last-child {
-    margin-right: auto;
+.poem-row .poem:last-child {
+    margin-right: 0;
 }
 
 /* 适应屏幕大小 */
