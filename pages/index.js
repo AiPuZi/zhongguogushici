@@ -102,19 +102,15 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
-    // 增加当前页的页数，并在状态更新后预取下一页的数据
-    setCurrentPage((prevPage) => {
-      const newPage = prevPage + 1;
-      // 预取下一页的数据
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      preFetchNextPage(currentCategory, newPage, poemsPerPage, keyword, (data) => {
-        // 更新页面数据为预取的数据
-        setPoetryData(data);
-        // 清空nextPageData状态，以便下一次的预取操作
-        setNextPageData([]);
-      });
-      return newPage;
-    });
+    setCurrentPage(prevPage => prevPage + 1);
+    setPoetryData(nextPageData);
+    setNextPageData([]);
+
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const nextPage = currentPage + 1;
+    const nextData = await fetchNextPageData(currentCategory, nextPage, poemsPerPage, keyword);
+    setCurrentPage(nextPage);
+    setPoetryData(nextData);
   }
 };
 
