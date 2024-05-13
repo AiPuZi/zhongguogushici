@@ -42,7 +42,7 @@ export async function getStaticProps() {
 
   // 将页面中的所有繁体字转换为简体字
   const simplifiedPoetryData = await Promise.all(poetryData.map(async item => {
-    const simplifiedContent = await OpenCC.Convert(item.content.join(''), 't', 'cn');
+    const simplifiedContent = await OpenCC.convert(item.content.join(''), 't', 'cn');
     return { ...item, content: simplifiedContent.split('') };
   }));
 
@@ -98,7 +98,7 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     
     // 将输入的繁体字转换为简体字
-    const simplifiedKeyword = await OpenCC.Convert(searchKeyword, 't', 'cn');
+    const simplifiedKeyword = await OpenCC.convert(searchKeyword, 't', 'cn');
     
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
