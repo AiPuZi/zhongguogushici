@@ -41,6 +41,12 @@ export async function getStaticProps() {
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
   })) : [];
 
+  // 将页面中的所有繁体字转换为简体字
+  const simplifiedPoetryData = await Promise.all(poetryData.map(async item => {
+    const simplifiedContent = await OpenCC.Convert(item.content.join(''), 't', 'cn');
+    return { ...item, content: simplifiedContent.split('') };
+  }));
+
   return {
     props: {
       initialPoetryData: poetryData,
@@ -91,6 +97,10 @@ function Home({ initialPoetryData }) {
 
   const handleSearch = async (event) => {
     event.preventDefault();
+    
+    // 将输入的繁体字转换为简体字
+  const simplifiedKeyword = await OpenCC.Convert(searchKeyword, 't', 'cn');
+    
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
     if (data.length < poemsPerPage) {
