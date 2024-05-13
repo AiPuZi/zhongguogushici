@@ -33,12 +33,11 @@ header {
     /* 移除了margin-left; 因为flex布局会管理对齐 */
 }
 
-
 /* 主内容区域样式 */
 main {
     max-width: 1100px;
     margin: 20px auto;
-    padding: 10px;
+    padding: 20px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
@@ -60,7 +59,7 @@ main {
 
 /* 单个古诗样式 */
 .poem {
-    flex: 1 1 calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex-basis: calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
