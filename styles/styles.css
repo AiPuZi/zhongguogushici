@@ -231,30 +231,35 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     header {
-        /* 如果header使用了flex布局，确保其在小屏幕上改为垂直排列 */
+        /* 确保header在小屏幕上改为垂直排列 */
         flex-direction: column;
         align-items: flex-start; /* 确保子元素从头开始排列 */
     }
 
     .logo {
-        /* logo将在顶部左对齐显示 */
+        /* logo在顶部左对齐显示 */
         text-align: left;
         width: 100%; /* 宽度调整为100%，确保占满整行 */
-        order: 1; /* 确保logo在搜索框上方 */
     }
 
     .slogan {
-        /* slogan将在logo下方右对齐显示 */
+        /* slogan在logo下方右对齐显示 */
         text-align: right;
         width: 100%; /* 宽度调整为100%，确保占满整行 */
-        order: 2; /* 确保slogan在搜索框上方 */
     }
 
-    .search-container {
-        /* 搜索框容器将显示在logo和slogan的下方，并居中 */
+    .search-box {
+        /* 搜索框将显示在logo和slogan下方，并居中 */
         width: 100%; /* 宽度调整为100%，确保占满整行 */
         text-align: center; /* 文本居中对齐 */
-        order: 3; /* 确保搜索框在slogan下方 */
         padding: 10px 0; /* 添加一些上下内边距 */
+        display: block; /* 显示为块级元素，确保占据整行 */
+    }
+
+    .search-box * {
+        /* 确保搜索框内的所有元素都是块级元素，以便占据整行 */
+        display: block;
+        width: 100%; /* 宽度调整为100% */
+        margin: auto; /* 自动外边距实现水平居中 */
     }
 }
