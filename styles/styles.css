@@ -55,6 +55,7 @@ main {
     display: flex;
     justify-content: flex-start; /* 从行的起始端开始布置子元素 */
     flex-wrap: wrap; /* 允许项目换行 */
+    margin-bottom: 20px;
 }
 
 /* 单个古诗样式 */
