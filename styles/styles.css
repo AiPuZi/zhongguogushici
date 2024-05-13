@@ -62,6 +62,7 @@ main {
 .poem {
     flex-grow: 1; /* 让单个诗词项目尽可能扩展 */
     flex-basis: calc(33.333% - 40px); /* 设置基本宽度为原来的三分之一减去固定间隔 */
+    min-width: calc(33.333% - 40px); /* 设置最小宽度 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
