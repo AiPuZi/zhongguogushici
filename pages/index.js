@@ -3,12 +3,11 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import OpenCC from 'opencc-js/convert';
-import { t2s } from 'opencc-js';
+import * as OpenCC from 'opencc-js'; // 修改导入方式
 
 // 使用转换函数
 const traditionalText = "開放中文轉換";
-const simplifiedText = t2s(traditionalText);
+const simplifiedText = OpenCC.t2s(traditionalText); // 使用 OpenCC.t2s 进行繁简转换
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -72,13 +71,13 @@ function Home({ initialPoetryData }) {
         // 进行繁体转简体转换
         const simplifiedData = data.map(item => ({
           ...item,
-          title: t2s(item.title),
-          author: t2s(item.author),
-          chapter: t2s(item.chapter),
-          section: t2s(item.section),
-          content: item.content.map(paragraph => t2s(paragraph)),
-          comments: item.comments.map(comment => t2s(comment)),
-          rhythmic: t2s(item.rhythmic)
+          title: OpenCC.t2s(item.title), // 使用 OpenCC.t2s 进行繁简转换
+          author: OpenCC.t2s(item.author), // 使用 OpenCC.t2s 进行繁简转换
+          chapter: OpenCC.t2s(item.chapter), // 使用 OpenCC.t2s 进行繁简转换
+          section: OpenCC.t2s(item.section), // 使用 OpenCC.t2s 进行繁简转换
+          content: item.content.map(paragraph => OpenCC.t2s(paragraph)), // 使用 OpenCC.t2s 进行繁简转换
+          comments: item.comments.map(comment => OpenCC.t2s(comment)), // 使用 OpenCC.t2s 进行繁简转换
+          rhythmic: OpenCC.t2s(item.rhythmic) // 使用 OpenCC.t2s 进行繁简转换
         }));
         setPoetryData(simplifiedData);
         if (currentPage === 0) {
