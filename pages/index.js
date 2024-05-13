@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { t2s } from 'opencc-js';
+import * as OpenCC from 'opencc-js';
 
 // 使用转换函数
 const traditionalText = "開放中文轉換";
