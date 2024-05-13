@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import OpenCC from 'opencc-js';
+import { t2s } from 'opencc-js';
 
 // 获取转换函数
 const t2s = OpenCC['t2s']();  // 繁体转简体
