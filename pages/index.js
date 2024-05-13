@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
-import * as OpenCC from 'opencc-js'; // 导入opencc-js库
+import * as OpenCC from 'opencc-js/core'; // 导入opencc-js核心
+import * as Locale from 'opencc-js/preset'; // 导入opencc-js预设
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -42,7 +43,8 @@ export async function getStaticProps() {
 
   // 将页面中的所有繁体字转换为简体字
   const simplifiedPoetryData = await Promise.all(poetryData.map(async item => {
-    const simplifiedContent = await OpenCC.convert(item.content.join(''), 't', 'cn');
+    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+    const simplifiedContent = converter(item.content.join(''));
     return { ...item, content: simplifiedContent.split('') };
   }));
 
@@ -96,10 +98,6 @@ function Home({ initialPoetryData }) {
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    
-    // 将输入的繁体字转换为简体字
-    const simplifiedKeyword = await OpenCC.convert(searchKeyword, 't', 'cn');
-    
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
     if (data.length < poemsPerPage) {
