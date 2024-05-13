@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import * as OpenCC from 'opencc-js'; // 导入opencc-js库
 
 async function fetchData(category, page, perPage, keyword) {
@@ -99,7 +98,7 @@ function Home({ initialPoetryData }) {
     event.preventDefault();
     
     // 将输入的繁体字转换为简体字
-  const simplifiedKeyword = await OpenCC.Convert(searchKeyword, 't', 'cn');
+    const simplifiedKeyword = await OpenCC.Convert(searchKeyword, 't', 'cn');
     
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
     setPoetryData(data);
