@@ -184,8 +184,7 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">
-        本站有几十万首诗词，数据量庞大，难免出现错漏。如你在查阅中发现问题，请至留言板留言反馈。    
-        <br />在使用方面，网站还存在几个小问题（有空会持续改进更新），具体请看留言板第92条留言。
+        本站收录诗词数十万首。网站在使用上仍存在一些小问题，详情请至留言板查看或反馈。    
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
       
