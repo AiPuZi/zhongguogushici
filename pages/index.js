@@ -41,16 +41,17 @@ export async function getStaticProps() {
     content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
   })) : [];
 
+  const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+
   // 将页面中的所有繁体字转换为简体字
-  const simplifiedPoetryData = await Promise.all(poetryData.map(async item => {
-    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-    const simplifiedContent = converter(item.content.join(''));
-    return { ...item, content: simplifiedContent.split('') };
-  }));
+  const simplifiedPoetryData = poetryData.map(item => {
+    const simplifiedContent = item.content.map(paragraph => converter(paragraph)).join('\n');
+    return { ...item, content: simplifiedContent };
+  });
 
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: simplifiedPoetryData,
     },
     revalidate: 10,
   };
