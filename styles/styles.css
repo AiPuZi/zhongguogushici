@@ -250,20 +250,11 @@ footer span:first-child {
         order: 2; /* 确保slogan在搜索框上方 */
     }
 
-    .search-box {
-        /* 搜索框将显示在logo和slogan的下方，并居中 */
+    .search-container {
+        /* 搜索框容器将显示在logo和slogan的下方，并居中 */
         width: 100%; /* 宽度调整为100%，确保占满整行 */
         text-align: center; /* 文本居中对齐 */
         order: 3; /* 确保搜索框在slogan下方 */
         padding: 10px 0; /* 添加一些上下内边距 */
-    }
-
-    /* 确保搜索框内的元素也能居中显示 */
-    .search-box input[type="text"], 
-    .search-box button {
-        /* 可能需要的样式调整，确保它们也居中 */
-        width: auto; /* 或者设置一个具体的宽度 */
-        margin: 0 auto; /* 自动的外边距来居中元素 */
-        display: block; /* 块级元素会占据整行 */
     }
 }
