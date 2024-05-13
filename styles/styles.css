@@ -60,13 +60,15 @@ main {
 
 /* 单个古诗样式 */
 .poem {
-    flex: 1 1 calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex-grow: 1; /* 让单个诗词项目尽可能扩展 */
+    flex-basis: calc(33.333% - 40px); /* 设置基本宽度为原来的三分之一减去固定间隔 */
+    width: 100%; /* 设置宽度为100%，让单个诗词项目占据整行 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: none;
-    margin: 7px; 
+    margin: 7px;
 }
 
 .poem h3 {
@@ -231,43 +233,30 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     header {
-        /* 确保header在小屏幕上改为垂直排列 */
-        display: flex;
+        /* 如果header使用了flex布局，确保其在小屏幕上改为垂直排列 */
         flex-direction: column;
-        align-items: flex-start; /* 子元素从头开始排列 */
-        width: 100%; /* 确保header占满整个屏幕宽度 */
-    }
-
-    header > * {
-        flex: 1 0 auto; /* 子元素具有相同的flex基础值，使它们在主轴上平均分配空间 */
-    }
-
-    .logo,
-    .slogan,
-    .search-container {
-        width: 100%; /* 所有元素都占满整行 */
-        text-align: center; /* 文本居中对齐 */
-        padding: 10px 0; /* 添加上下内边距 */
+        align-items: flex-start; /* 确保子元素从头开始排列 */
     }
 
     .logo {
-        text-align: left; /* logo文本左对齐 */
+        /* logo将在顶部左对齐显示 */
+        text-align: left;
+        width: 100%; /* 宽度调整为100%，确保占满整行 */
+        order: 1; /* 确保logo在搜索框上方 */
     }
 
     .slogan {
-        text-align: right; /* slogan文本右对齐 */
-        margin-top: 10px; /* 在slogan和搜索框之间添加一些空间 */
+        /* slogan将在logo下方右对齐显示 */
+        text-align: right;
+        width: 100%; /* 宽度调整为100%，确保占满整行 */
+        order: 2; /* 确保slogan在搜索框上方 */
     }
 
-    .search-container {
-        display: flex; /* 使用flex布局 */
-        flex-direction: column; /* 项目垂直排列 */
-        align-items: stretch; /* 子元素在交叉轴方向上占满整个空间 */
-    }
-
-    .search-container input[type="text"],
-    .search-container button {
-        width: 90%; /* 输入框和按钮的宽度 */
-        margin-bottom: 10px; /* 在元素之间添加一些空间 */
+    .search-box {
+        /* 搜索框将显示在logo和slogan的下方，并居中 */
+        width: 100%; /* 宽度调整为100%，确保占满整行 */
+        text-align: center; /* 文本居中对齐 */
+        order: 3; /* 确保搜索框在slogan下方 */
+        padding: 10px 0; /* 添加一些上下内边距 */
     }
 }
