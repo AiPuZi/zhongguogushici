@@ -53,6 +53,7 @@ main {
 /* 单行古诗样式 */
 .poem-row {
     display: flex;
+    justify-content: flex-start; 
     flex-wrap: wrap; /* 允许项目换行 */
     margin-bottom: 20px; /* 为每一行添加底部间距 */
 }
@@ -82,7 +83,7 @@ main {
 
 /* 最后一个古诗不需要右边距 */
 .poem-row .poem:last-child {
-    margin-right: 0;
+    margin-right: auto;
 }
 
 /* 适应屏幕大小 */
