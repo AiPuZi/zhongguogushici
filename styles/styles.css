@@ -52,22 +52,21 @@ main {
 }
 
 /* 单行古诗样式 */
-.poem-row:after {
-    content: "";
-    flex: auto;
-    flex-basis: calc(33.333% - 40px);
+.poem-row {
+    display: flex;
+    justify-content: flex-start; /* 从行的起始端开始布置子元素 */
+    flex-wrap: wrap; /* 允许项目换行 */
 }
 
 /* 单个古诗样式 */
 .poem {
-    flex-grow: 1; /* 让单个诗词项目尽可能扩展 */
-    flex-basis: calc(33.333% - 40px); /* 设置基本宽度为原来的三分之一减去固定间隔 */
+    flex: 1 1 calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
     background-color: #f9f9f9;
     border: none;
-    margin: 7px;
+    margin: 7px; 
 }
 
 .poem h3 {
