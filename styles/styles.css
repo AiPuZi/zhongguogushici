@@ -41,7 +41,7 @@ main {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between; /* 平均分布每行的诗词 */
+    justify-content: flex-start; /* 从容器的起始处开始排列子元素 */
 }
 
 /* 古诗容器样式 */
@@ -53,13 +53,13 @@ main {
 /* 单行古诗样式 */
 .poem-row {
     display: flex;
-    justify-content: flex-start; /* 从行的起始端开始布置子元素 */
     flex-wrap: wrap; /* 允许项目换行 */
+    margin-bottom: 20px; /* 为每一行添加底部间距 */
 }
 
 /* 单个古诗样式 */
 .poem {
-    flex-basis: calc(33.333% - 40px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
+    flex-basis: calc(33.333% - 20px); /* 每个诗词项目尝试占据三分之一的行宽，减去固定间隔 */
     text-align: center;
     padding: 10px;
     box-sizing: border-box;
