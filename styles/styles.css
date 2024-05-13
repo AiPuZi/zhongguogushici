@@ -231,12 +231,31 @@ footer span:first-child {
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
 @media screen and (max-width: 767px) {
     header {
-        grid-template-columns: 1fr; /* 在小屏幕上，仅有一列 */
-        grid-template-rows: auto auto; /* 自动调整行高 */
-        justify-items: center; /* 水平居中 */
+        position: static;
+        padding: 10px 0; /* 增加一些上下的内边距 */
+    }
+
+    .logo, .slogan {
+        position: static; /* 取消绝对定位 */
+        transform: none; /* 取消之前的居中转换 */
+        width: auto; /* 宽度恢复默认 */
+        margin: 0; /* 取消之前可能设置的外边距 */
+    }
+
+    .logo {
+        text-align: left; /* logo左对齐 */
+        order: 1; /* 用于flex布局的顺序 */
     }
 
     .slogan {
-        text-align: center; /* 在小屏幕上居中对齐slogan */
+        text-align: right; /* slogan右对齐 */
+        order: 3; /* 用于flex布局的顺序 */
+    }
+
+    .search-box {
+        order: 2; /* 搜索框在logo和slogan之间 */
+        width: 100%; /* 宽度100% */
+        margin-top: 10px; /* 与logo有一定间距 */
+        text-align: center; /* 居中对齐 */
     }
 }
