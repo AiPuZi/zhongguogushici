@@ -75,7 +75,7 @@ function Home({ initialPoetryData }) {
       const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
       const simplifiedData = data.map(item => ({
         ...item,
-        content: item.content.map(paragraph => converter(paragraph).split('\n')),
+        content: item.content.map(paragraph => converter(paragraph).split('\n')), // 进行分段处理
       }));
       setPoetryData(simplifiedData);
       if (currentPage === 0) {
