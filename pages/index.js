@@ -84,13 +84,13 @@ function Home({ initialPoetryData }) {
     }
   };
 
-  if (initialPoetryData && initialPoetryData.length > 0) {
-    setPoetryData(initialPoetryData); // 更新 poetryData 状态
-    if (currentPage === 0) {
-      preFetchNextPage(currentCategory, currentPage, poemsPerPage, '', setNextPageData); // 在初始渲染时，没有搜索关键字
-    }
+  if (!initialPoetryData || initialPoetryData.length === 0) {
+    fetchDataAndSetPoetryData();
   } else {
-    fetchDataAndSetPoetryData(); // 如果 initialPoetryData 为空，则获取数据并更新状态
+    setPoetryData(initialPoetryData);
+    if (currentPage === 0) {
+      preFetchNextPage(currentCategory, currentPage, poemsPerPage, '', setNextPageData);
+    }
   }
 
   return () => {
@@ -130,7 +130,7 @@ function Home({ initialPoetryData }) {
       content: item.content.map(paragraph => converter(paragraph).split('\n')),
     }));
     setPoetryData(simplifiedData);
-    setNextPageData([]); // 清空下一页数据
+    setNextPageData([]);
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
     router.push({
       pathname: router.pathname,
