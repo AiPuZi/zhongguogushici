@@ -88,14 +88,13 @@ function Home({ initialPoetryData }) {
   };
 }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
 
-  const handleCategoryChange = async (category, event) => {
-    event.preventDefault();
-    setCurrentCategory(category);
-    setCurrentPage(0);
-    const data = await fetchData(category, 0, poemsPerPage, '');
-    setPoetryData(data);
-    preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData); // Pre-fetch data for next page
-  };
+ const handleCategoryChange = (category, event) => {
+  event.preventDefault();
+  router.push({
+    pathname: `/${category}`,
+    query: { page: 0 },
+  });
+};
 
   const handleSearch = async (event) => {
     event.preventDefault();
@@ -110,18 +109,17 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    if (nextPageData.length > 0) {
-      // 增加当前页的页数
-      setCurrentPage((prevPage) => prevPage + 1);
-      // 更新页面数据为预取的数据
-      setPoetryData(nextPageData);
-      // 清空nextPageData状态，以便下一次的预取操作
-      setNextPageData([]);
-      // 预取下一页的数据
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
-    }
-  };
+  if (nextPageData.length > 0) {
+    setCurrentPage(prevPage => prevPage + 1);
+    setPoetryData(nextPageData);
+    setNextPageData([]);
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page: currentPage + 1 },
+    });
+  }
+};
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
