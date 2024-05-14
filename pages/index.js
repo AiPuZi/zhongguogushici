@@ -79,7 +79,7 @@ function Home({ initialPoetryData }) {
     }
   };
 
-  if (currentCategory !== '') {
+  if (initialPoetryData && initialPoetryData.length > 0) {
     fetchDataAndSetPoetryData();
   }
 
