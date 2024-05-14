@@ -33,17 +33,6 @@ async function fetchData(category, page, perPage, keyword) {
   }
 }
 
-  return data.map(item => ({
-    title: item.title || '',
-    author: item.author || '',
-    chapter: item.chapter || '',
-    section: item.section || '',
-    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
-    comments: Array.isArray(item.comment) ? item.comment : [],
-    rhythmic: item.rhythmic || '',
-  }));
-}
-
 async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
   const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
   setNextPageData(data);
