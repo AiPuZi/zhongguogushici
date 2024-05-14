@@ -26,10 +26,10 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
-const preFetchNextPage = async (category, currentPage, poemsPerPage, keyword, setNextPageData) => {
+async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
   const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
   setNextPageData(data);
-};
+}
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
@@ -67,26 +67,34 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
 useEffect(() => {
-    const fetchDataAndSetPoetryData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
       const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
       const simplifiedData = data.map(item => ({
         ...item,
-        content: item.content.map(paragraph => converter(paragraph)).join('\n'),
+        content: item.content.map(paragraph => converter(paragraph).split('\n')),
       }));
-
       setPoetryData(simplifiedData);
       if (currentPage === 0) {
         preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
       }
-    };
-
-    if (initialPoetryData && initialPoetryData.length > 0) {
-      fetchDataAndSetPoetryData();
     }
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
+  };
+
+  if (initialPoetryData && initialPoetryData.length > 0 && currentPage === 0) {
+    // 这里添加 currentPage === 0 的判断条件，以确保只在初次加载首页时设置诗词数据
+    setPoetryData(initialPoetryData);
+  } else {
+    fetchDataAndSetPoetryData();
+  }
+
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
 
   const handleCategoryChange = async (category, event) => {
   event.preventDefault();
@@ -112,21 +120,25 @@ useEffect(() => {
   };
 
   const goToNextPage = async () => {
-  const totalPage = Math.ceil(poetryData.length / poemsPerPage);
-  if (currentPage < totalPage - 1) {
-    setCurrentPage(prevPage => prevPage + 1);
-    const simplifiedData = nextPageData.map(item => ({
-      ...item,
-      content: item.content.map(paragraph => converter(paragraph).split('\n')),
-    }));
-    setPoetryData(simplifiedData);
-    setNextPageData([]);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: currentPage + 1 },
+  if (nextPageData.length > 0) {
+    setCurrentPage(prevPage => {
+      const nextPage = prevPage + 1;
+      const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+      const simplifiedData = nextPageData.map(item => ({
+        ...item,
+        content: item.content.map(paragraph => converter(paragraph).split('\n')),
+      }));
+      setPoetryData(simplifiedData);
+      setNextPageData([]);
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      router.push({
+        pathname: router.pathname,
+        query: { ...router.query, page: nextPage },
+      });
+      return nextPage;
     });
   } else {
-    console.log("已经是最后一页，无法加载更多");
+    console.log("没有下一页数据可加载");
   }
 };
 
