@@ -3,8 +3,6 @@ import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-const OpenCC = require('opencc');
-const converter = new OpenCC('s2t.json');
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
