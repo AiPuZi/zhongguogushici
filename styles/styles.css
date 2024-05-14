@@ -230,7 +230,7 @@ footer span:first-child {
 
     .logo, .slogan {
         position: static; /* 恢复默认的定位方式 */
-        margin: 5px 0; /* 调整 logo 和 slogan 之间的间距 */
+        margin: 2px 0; /* 调整 logo 和 slogan 之间的间距 */
     }
 
     .search-container {
