@@ -67,38 +67,31 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
 useEffect(() => {
-  let cancel = false;
-  const fetchDataAndSetPoetryData = async () => {
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-    if (!cancel) {
+    const fetchDataAndSetPoetryData = async () => {
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+
       const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
       const simplifiedData = data.map(item => ({
         ...item,
-        content: item.content.map(paragraph => converter(paragraph).split('\n')),
+        content: item.content.map(paragraph => converter(paragraph)).join('\n'),
       }));
+
       setPoetryData(simplifiedData);
       if (currentPage === 0) {
         preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
       }
+    };
+
+    if (initialPoetryData && initialPoetryData.length > 0) {
+      fetchDataAndSetPoetryData();
     }
-  };
-
-  if (initialPoetryData && initialPoetryData.length > 0) {
-    fetchDataAndSetPoetryData();
-  }
-
-  return () => {
-    cancel = true;
-  };
-}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
 
   const handleCategoryChange = async (category, event) => {
   event.preventDefault();
   setCurrentCategory(category);
   setCurrentPage(0); // 重置当前页数为第一页
-  setPoetryData([]);  // 清空当前诗词数据
-  setNextPageData([]);  // 清空下一页数据
 };
 
   const handleSearch = async (event) => {
@@ -120,21 +113,18 @@ useEffect(() => {
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
-    const nextPageNumber = currentPage + 1;
-    setCurrentPage(nextPageNumber);
-
-    const data = nextPageData;  // 使用已预取的下一页数据
+    setCurrentPage(prevPage => prevPage + 1);
     const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-    const simplifiedData = data.map(item => ({
+    const simplifiedData = nextPageData.map(item => ({
       ...item,
       content: item.content.map(paragraph => converter(paragraph).split('\n')),
     }));
     setPoetryData(simplifiedData);
-    setNextPageData([]);  // 清空下一页数据
-
+    setNextPageData([]);
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
     router.push({
       pathname: router.pathname,
-      query: { page: nextPageNumber },
+      query: { ...router.query, page: currentPage + 1 },
     });
   } else {
     console.log("没有下一页数据可加载");
