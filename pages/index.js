@@ -95,19 +95,17 @@ function Home({ initialPoetryData }) {
 
   const handleCategoryChange = (category, event) => {
   event.preventDefault();
-  setCurrentCategory(category); // 更新当前分类
-  setPoetryData([]); // 清空当前诗词数据，避免显示旧数据
-  setNextPageData([]); // 清空下一页数据
-  setCurrentPage(0); // 重置当前页数
+  // 更新当前分类和重置页面数据
+  setCurrentCategory(category);
+  setPoetryData([]);
+  setNextPageData([]);
+  setCurrentPage(0);
 
   // 更新路由，保持当前页数和搜索词为空
   router.push({
     pathname: `/${category}`,
     query: { page: 0 },
   });
-
-  // 通过返回 false 阻止默认行为
-  return false;
 };
 
   const handleSearch = async (event) => {
