@@ -225,7 +225,7 @@ footer span:first-child {
     header {
         flex-direction: column;
         align-items: center; /* 水平居中 */
-        padding: 1px; /* 调整 padding */
+        padding: 20px; /* 调整 padding */
     }
 
     .logo, .slogan {
