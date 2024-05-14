@@ -26,10 +26,10 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
-async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
+const preFetchNextPage = async (category, currentPage, poemsPerPage, keyword, setNextPageData) => {
   const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
   setNextPageData(data);
-}
+};
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
@@ -112,22 +112,21 @@ useEffect(() => {
   };
 
   const goToNextPage = async () => {
-  if (nextPageData.length > 0) {
+  const totalPage = Math.ceil(poetryData.length / poemsPerPage);
+  if (currentPage < totalPage - 1) {
     setCurrentPage(prevPage => prevPage + 1);
-    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
     const simplifiedData = nextPageData.map(item => ({
       ...item,
       content: item.content.map(paragraph => converter(paragraph).split('\n')),
     }));
     setPoetryData(simplifiedData);
     setNextPageData([]);
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
     router.push({
       pathname: router.pathname,
       query: { ...router.query, page: currentPage + 1 },
     });
   } else {
-    console.log("没有下一页数据可加载");
+    console.log("已经是最后一页，无法加载更多");
   }
 };
 
