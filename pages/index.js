@@ -97,6 +97,8 @@ useEffect(() => {
   event.preventDefault();
   setCurrentCategory(category);
   setCurrentPage(0); // 重置当前页数为第一页
+  setPoetryData([]);  // 清空当前诗词数据
+  setNextPageData([]);  // 清空下一页数据
 };
 
   const handleSearch = async (event) => {
@@ -118,18 +120,21 @@ useEffect(() => {
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
-    setCurrentPage(prevPage => prevPage + 1);
+    const nextPageNumber = currentPage + 1;
+    setCurrentPage(nextPageNumber);
+
+    const data = nextPageData;  // 使用已预取的下一页数据
     const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-    const simplifiedData = nextPageData.map(item => ({
+    const simplifiedData = data.map(item => ({
       ...item,
       content: item.content.map(paragraph => converter(paragraph).split('\n')),
     }));
     setPoetryData(simplifiedData);
-    setNextPageData([]);
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    setNextPageData([]);  // 清空下一页数据
+
     router.push({
       pathname: router.pathname,
-      query: { ...router.query, page: currentPage + 1 },
+      query: { page: nextPageNumber },
     });
   } else {
     console.log("没有下一页数据可加载");
