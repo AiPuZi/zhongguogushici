@@ -4,6 +4,7 @@ import Poem from '../components/poem';
 import { useRouter } from 'next/router';
 import * as OpenCC from 'opencc-js/core'; // 导入opencc-js核心
 import * as Locale from 'opencc-js/preset'; // 导入opencc-js预设
+import Link from 'next/link';
 
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
@@ -165,23 +166,23 @@ function Home({ initialPoetryData }) {
       </header>
 
       <nav className="poetry-navigation">
-        <a href="/quantangshi" onClick={(e) => handleCategoryChange('quantangshi', e)}>全唐诗</a>
-        <a href="/tangshisanbaishou" onClick={(e) => handleCategoryChange('tangshisanbaishou', e)}>唐三百</a> 
-        <a href="/shuimotangshi" onClick={(e) => handleCategoryChange('shuimotangshi', e)}>水墨唐诗</a>
-        <a href="/yudingquantangshi" onClick={(e) => handleCategoryChange('yudingquantangshi', e)}>御定全唐诗</a>
-        <a href="/quansongci" onClick={(e) => handleCategoryChange('quansongci', e)}>全宋词</a>
-        <a href="/songcisanbaishou" onClick={(e) => handleCategoryChange('songcisanbaishou', e)}>宋三百</a>
-        <a href="/yuanqu" onClick={(e) => handleCategoryChange('yuanqu', e)}>元曲</a>
-        <a href="/huajianji" onClick={(e) => handleCategoryChange('huajianji', e)}>花间集</a>
-        <a href="/nantangerzhuci" onClick={(e) => handleCategoryChange('nantangerzhuci', e)}>南唐二主词</a>
-        <a href="/shijing" onClick={(e) => handleCategoryChange('shijing', e)}>诗经</a>
-        <a href="/chuci" onClick={(e) => handleCategoryChange('chuci', e)}>楚辞</a>
-        <a href="/lunyu" onClick={(e) => handleCategoryChange('lunyu', e)}>论语</a>
-        <a href="/mengxue" onClick={(e) => handleCategoryChange('mengxue', e)}>蒙学</a>
-        <a href="/nalanxingde" onClick={(e) => handleCategoryChange('nalanxingde', e)}>纳兰性德</a>
-        <a href="/youmengying" onClick={(e) => handleCategoryChange('youmengying', e)}>幽梦影</a>
-        <a href="/caocaoshiji" onClick={(e) => handleCategoryChange('caocaoshiji', e)}>曹操诗集</a>
-      </nav>
+  <Link href="/quantangshi"><a>全唐诗</a></Link>
+  <Link href="/tangshisanbaishou"><a>唐三百</a></Link> 
+  <Link href="/shuimotangshi"><a>水墨唐诗</a></Link>
+  <Link href="/yudingquantangshi"><a>御定全唐诗</a></Link>
+  <Link href="/quansongci"><a>全宋词</a></Link>
+  <Link href="/songcisanbaishou"><a>宋三百</a></Link>
+  <Link href="/yuanqu"><a>元曲</a></Link>
+  <Link href="/huajianji"><a>花间集</a></Link>
+  <Link href="/nantangerzhuci"><a>南唐二主词</a></Link>
+  <Link href="/shijing"><a>诗经</a></Link>
+  <Link href="/chuci"><a>楚辞</a></Link>
+  <Link href="/lunyu"><a>论语</a></Link>
+  <Link href="/mengxue"><a>蒙学</a></Link>
+  <Link href="/nalanxingde"><a>纳兰性德</a></Link>
+  <Link href="/youmengying"><a>幽梦影</a></Link>
+  <Link href="/caocaoshiji"><a>曹操诗集</a></Link>
+</nav>
       
       <main id="poetry-content">
         {Array.isArray(poetryData) && poetryData.map((poem, index) => (
