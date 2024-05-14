@@ -67,39 +67,49 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-  let cancel = false;
-  const fetchDataAndSetPoetryData = async () => {
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-    if (!cancel) {
-      setPoetryData(data);
-      if (currentPage === 0) {
-        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+    let cancel = false;
+    const fetchDataAndSetPoetryData = async () => {
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      if (!cancel) {
+        const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+        const simplifiedData = data.map(item => ({
+          ...item,
+          content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
+        }));
+        setPoetryData(simplifiedData);
+        if (currentPage === 0) {
+          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+        }
       }
+    };
+
+    if (initialPoetryData && initialPoetryData.length > 0) {
+      fetchDataAndSetPoetryData();
     }
+
+    return () => {
+      cancel = true;
+    };
+  }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
+
+  const handleCategoryChange = (category, event) => {
+    event.preventDefault();
+    router.push({
+      pathname: `/${category}`,
+      query: { page: 0 },
+    });
   };
-
-  if (initialPoetryData && initialPoetryData.length > 0) {
-    fetchDataAndSetPoetryData();
-  }
-
-  return () => {
-    cancel = true;
-  };
-}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
-
- const handleCategoryChange = (category, event) => {
-  event.preventDefault();
-  router.push({
-    pathname: `/${category}`,
-    query: { page: 0 },
-  });
-};
 
   const handleSearch = async (event) => {
     event.preventDefault();
     const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
-    setPoetryData(data);
+    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+    const simplifiedData = data.map(item => ({
+      ...item,
+      content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
+    }));
+    setPoetryData(simplifiedData);
     if (data.length < poemsPerPage) {
       // 如果搜索结果不足一页，则禁用下一页按钮
       setNextPageData([]);
@@ -109,22 +119,27 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-  if (nextPageData.length > 0) {
-    setCurrentPage(prevPage => prevPage + 1);
-    setPoetryData(nextPageData);
-    setNextPageData([]);
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: currentPage + 1 },
-    });
-  }
-};
+    if (nextPageData.length > 0) {
+      setCurrentPage(prevPage => prevPage + 1);
+      const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+      const simplifiedData = nextPageData.map(item => ({
+        ...item,
+        content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
+      }));
+      setPoetryData(simplifiedData);
+      setNextPageData([]);
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+      router.push({
+        pathname: router.pathname,
+        query: { ...router.query, page: currentPage + 1 },
+      });
+    }
+  };
 
   const goToPrevPage = () => {
     setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
-  
+
   return (
     <>
       <Head>
