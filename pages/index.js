@@ -67,36 +67,36 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    let cancel = false;
-    const fetchDataAndSetPoetryData = async () => {
-  const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-  const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-  if (!cancel) {
-    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-    const simplifiedData = data.map(item => ({
-      ...item,
-      // 分段处理诗词内容
-      content: item.content.map(paragraph => converter(paragraph).split('\n')), 
-    }));
-    setPoetryData(simplifiedData);
-    if (currentPage === 0) {
-      preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+      const simplifiedData = data.map(item => ({
+        ...item,
+        content: item.content.map(paragraph => converter(paragraph).split('\n')),
+      }));
+      setPoetryData(simplifiedData);
+      if (currentPage === 0) {
+        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
+      }
     }
+  };
+
+  if (initialPoetryData && initialPoetryData.length > 0) {
+    fetchDataAndSetPoetryData();
   }
-};
-    if (initialPoetryData && initialPoetryData.length > 0) {
-      fetchDataAndSetPoetryData();
-    }
 
-    return () => {
-      cancel = true;
-    };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
 
-  const handleCategoryChange = (category, event) => {
+  const handleCategoryChange = async (category, event) => {
   event.preventDefault();
-  // 更新页面内容
   setCurrentCategory(category);
+  setCurrentPage(0); // 重置当前页数为第一页
 };
 
   const handleSearch = async (event) => {
@@ -122,7 +122,7 @@ function Home({ initialPoetryData }) {
     const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
     const simplifiedData = nextPageData.map(item => ({
       ...item,
-      content: item.content.map(paragraph => converter(paragraph).split('\n')), // 分段处理诗词内容
+      content: item.content.map(paragraph => converter(paragraph).split('\n')),
     }));
     setPoetryData(simplifiedData);
     setNextPageData([]);
