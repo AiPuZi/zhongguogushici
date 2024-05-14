@@ -215,7 +215,6 @@ footer span:first-child {
 }
 
 /* 媒体查询，针对手机屏幕尺寸进行样式调整 */
-/* 适应屏幕大小 */
 @media screen and (max-width: 767px) {
     /* 页面内容居中 */
     body {
@@ -246,5 +245,11 @@ footer span:first-child {
     /* 主内容区域调整 */
     main {
         margin: 20px auto; /* 使主内容区域水平居中 */
+    }
+
+    /* 每行只显示一首诗 */
+    .poem {
+        flex: 1 1 100%; /* 让每首诗在一行内占据整个宽度 */
+        margin: 7px 0; /* 调整诗句之间的间距 */
     }
 }
