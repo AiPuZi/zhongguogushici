@@ -100,28 +100,14 @@ function Home({ initialPoetryData }) {
   setNextPageData([]); // 清空下一页数据
   setCurrentPage(0); // 重置当前页数
 
-  // 执行分类切换后的数据获取和渲染逻辑
-  fetchData(category, 0, poemsPerPage, '').then(data => {
-    // 处理数据和简体转换
-    const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-    const simplifiedData = data.map(item => ({
-      ...item,
-      content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
-    }));
-    setPoetryData(simplifiedData);
-    if (data.length === poemsPerPage) {
-      // 如果有下一页数据，预取下一页数据
-      preFetchNextPage(category, 0, poemsPerPage, '', setNextPageData);
-    } else {
-      setNextPageData([]); // 如果不足一页，则清空下一页数据
-    }
-
-    // 更新路由，保持当前页数和搜索词为空
-    router.push({
-      pathname: `/${category}`,
-      query: { page: 0 },
-    });
+  // 更新路由，保持当前页数和搜索词为空
+  router.push({
+    pathname: `/${category}`,
+    query: { page: 0 },
   });
+
+  // 通过返回 false 阻止默认行为
+  return false;
 };
 
   const handleSearch = async (event) => {
