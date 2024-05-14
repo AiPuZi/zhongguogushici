@@ -235,7 +235,6 @@ footer span:first-child {
 
     .search-container {
         position: static; /* 恢复默认的定位方式 */
-        margin-top: 10px; /* 调整搜索框的上外边距 */
     }
 
     .search-box {
