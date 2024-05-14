@@ -54,10 +54,11 @@ export async function getStaticProps() {
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
-  const poetryData = data.map(item => ({
-    ...item,
-    content: item.content.map(paragraph => converter(paragraph)).join('\n'),
-  }));
+  const poetryData = categoriesToConvert.includes('quantangshi','yudingquantangshi', 'mengxue',) ?
+    data.map(item => ({
+      ...item,
+      content: item.content.map(paragraph => converter(paragraph)).join('\n'),
+    })) : data;
 
   return {
     props: {
