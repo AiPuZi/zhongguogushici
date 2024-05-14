@@ -184,7 +184,7 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">    
-        <br />网站使用问题汇总与反馈：<a href="https://www.winglok.com" target="_blank">留言板</a>
+        网站使用问题汇总与反馈：<a href="https://www.winglok.com" target="_blank">留言板</a>
         <br />公众号：每天一诗
       </div>
       
