@@ -67,31 +67,31 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    let cancel = false;
-    const fetchDataAndSetPoetryData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      if (!cancel) {
-        const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-        const simplifiedData = data.map(item => ({
-          ...item,
-          content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
-        }));
-        setPoetryData(simplifiedData);
-        if (currentPage === 0) {
-          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
-        }
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const fetchedData = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+      const simplifiedData = fetchedData.map(item => ({
+        ...item,
+        content: item.content.map(paragraph => converter(paragraph)).join('\n'), // 进行繁简转换
+      }));
+      setPoetryData(simplifiedData);
+      if (currentPage === 0) {
+        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
       }
-    };
-
-    if (initialPoetryData && initialPoetryData.length > 0) {
-      fetchDataAndSetPoetryData();
     }
+  };
 
-    return () => {
-      cancel = true;
-    };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
+  if (initialPoetryData && initialPoetryData.length > 0) {
+    fetchDataAndSetPoetryData();
+  }
+
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]);
 
   const handleCategoryChange = (category, event) => {
     event.preventDefault();
