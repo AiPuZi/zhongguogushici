@@ -5,12 +5,6 @@ import { useRouter } from 'next/router';
 import * as OpenCC from 'opencc-js/core'; // 导入opencc-js核心
 import * as Locale from 'opencc-js/preset'; // 导入opencc-js预设
 
-// 创建转换器
-const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
-
-// 假设这是需要转换为简体字的分类列表
-const categoriesToConvert = ['quantangshi', 'yudingquantangshi', 'mengxue',];
-
 async function fetchData(category, page, perPage, keyword) {
   let url = `/api/poems?category=${category}&page=${page}&perPage=${perPage}`;
   if (keyword) {
@@ -21,16 +15,15 @@ async function fetchData(category, page, perPage, keyword) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
-
-  // 检查当前分类是否需要转换，如果需要，就进行繁体到简体的转换
-  if (categoriesToConvert.includes(category)) {
-    return data.map(item => ({
-      ...item,
-      content: item.content.map(paragraph => converter(paragraph)).join('\n'),
-    }));
-  } else {
-    return data;
-  }
+  return data.map(item => ({
+    title: item.title || '',
+    author: item.author || '',
+    chapter: item.chapter || '',
+    section: item.section || '',
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+    comments: Array.isArray(item.comment) ? item.comment : [],
+    rhythmic: item.rhythmic || '',
+  }));
 }
 
 async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
@@ -43,15 +36,22 @@ export async function getStaticProps() {
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=0&perPage=9`);
   const data = await response.json();
 
-  const poetryData = categoriesToConvert.includes('quantangshi','yudingquantangshi', 'mengxue',) ?
-    data.map(item => ({
-      ...item,
-      content: item.content.map(paragraph => converter(paragraph)).join('\n'),
-    })) : data;
+  const poetryData = Array.isArray(data) ? data.map(item => ({
+    ...item,
+    content: Array.isArray(item.paragraphs) ? item.paragraphs : item.content || item.para || [],
+  })) : [];
+
+  const converter = OpenCC.ConverterFactory(Locale.from.hk, Locale.to.cn);
+
+  // 将页面中的所有繁体字转换为简体字
+  const simplifiedPoetryData = poetryData.map(item => {
+    const simplifiedContent = item.content.map(paragraph => converter(paragraph)).join('\n');
+    return { ...item, content: simplifiedContent };
+  });
 
   return {
     props: {
-      initialPoetryData: poetryData,
+      initialPoetryData: simplifiedPoetryData,
     },
     revalidate: 10,
   };
@@ -67,26 +67,26 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    let cancel = false;
-    const fetchDataAndSetPoetryData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      if (!cancel) {
-        setPoetryData(data);
-        if (currentPage === 0) {
-          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
-        }
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      setPoetryData(data);
+      if (currentPage === 0) {
+        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
       }
-    };
-
-    if (currentCategory !== '') {
-      fetchDataAndSetPoetryData();
     }
+  };
 
-    return () => {
-      cancel = true;
-    };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+  if (currentCategory !== '') {
+    fetchDataAndSetPoetryData();
+  }
+
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query, initialPoetryData]); // Add initialPoetryData as a dependency
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
