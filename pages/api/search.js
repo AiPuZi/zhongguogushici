@@ -1,20 +1,11 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import path from 'path';
-import { convert } from 'opencc-js';
 
 export default async function handler(req, res) {
   const { query } = req.query;
 
   if (query) {
-    // 先用简体字关键字进行搜索
-    let poems = await searchPoems(query);
-    // 如果简体字搜索无结果，尝试繁体字搜索
-    if (poems.length === 0) {
-      const converter = await convert({ from: 'cn', to: 'tw' });
-      const convertedQuery = converter(query); // 这里需要调用转换器来转换查询字符串
-      poems = await searchPoems(convertedQuery);
-    }
-
+    const poems = await searchPoems(query);
     res.status(200).json(poems);
     return; // 结束响应
   } else {
