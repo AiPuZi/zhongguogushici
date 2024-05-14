@@ -189,7 +189,7 @@ function Home({ initialPoetryData }) {
       </div>
       
       <footer>
-        <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
+        <a href="https://www.gushici.wang">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
     </>
   );
