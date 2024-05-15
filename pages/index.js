@@ -104,13 +104,17 @@ function Home({ initialPoetryData }) {
   if (nextPageData.length > 0) {
     // 预取下一页的数据
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
-    // 增加当前页的页数
-    setCurrentPage((prevPage) => prevPage + 1);
-    // 更新页面数据为预取的数据
-    setPoetryData(nextPageData);
-    // 清空nextPageData状态，以便下一次的预取操作
-    setNextPageData([]);
+    const nextPage = currentPage + 1; // 计算下一页的页数
+    await preFetchNextPage(currentCategory, nextPage, poemsPerPage, keyword, setNextPageData);
+    
+    // 检查是否成功获取到下一页的数据
+    if (nextPageData.length > 0) {
+      // 更新当前页数和显示数据
+      setCurrentPage(nextPage);
+      setPoetryData(nextPageData);
+      // 清空nextPageData状态，以便下一次的预取操作
+      setNextPageData([]);
+    }
   }
 };
 
