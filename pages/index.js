@@ -106,9 +106,9 @@ function Home({ initialPoetryData }) {
   const goToNextPage = async () => {
   // 增加当前页的页数并获取下一页的数据
   const nextPage = currentPage + 1;
-  setCurrentPage(nextPage);
   const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
   const data = await fetchData(currentCategory, nextPage, poemsPerPage, keyword);
+  setCurrentPage(nextPage);
   setPoetryData(data);
 };
 
