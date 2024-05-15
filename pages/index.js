@@ -106,7 +106,9 @@ function Home({ initialPoetryData }) {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await preFetchNextPage(currentCategory, nextPage, poemsPerPage, keyword, setNextPageData);
+    const data = await fetchData(currentCategory, nextPage, poemsPerPage, keyword);
+    setPoetryData(data);
+    setNextPageData([]); // 清空nextPageData状态
   }
 };
 
