@@ -58,26 +58,40 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
 
   useEffect(() => {
-    let cancel = false;
-    const fetchDataAndSetPoetryData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-      if (!cancel) {
-        setPoetryData(data);
-        if (currentPage === 0) {
-          preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData); // Pre-fetch data for next page
-        }
+  let cancel = false;
+  const fetchDataAndSetPoetryData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+    if (!cancel) {
+      setPoetryData(data);
+      // 首次加载时预取下一页的数据
+      if (currentPage === 0) {
+        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
       }
-    };
-
-    if (currentCategory !== '') {
-      fetchDataAndSetPoetryData();
     }
+  };
 
-    return () => {
-      cancel = true;
-    };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+  if (currentCategory !== '') {
+    fetchDataAndSetPoetryData();
+  }
+
+  return () => {
+    cancel = true;
+  };
+}, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+
+// 新增的useEffect，仅当currentPage改变且大于0时执行预取下一页的逻辑
+useEffect(() => {
+  const fetchNextPageData = async () => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    // 由于currentPage已更新，我们可以直接使用currentPage来预取下一页数据
+    await preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
+  };
+
+  if (currentPage > 0) {
+    fetchNextPageData();
+  }
+}, [currentPage]); // 依赖数组中只有currentPage
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
@@ -102,14 +116,10 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
   if (nextPageData.length > 0) {
-    setCurrentPage((prevPage) => {
-      const newPage = prevPage + 1;
-      setPoetryData(nextPageData);
-      setNextPageData([]);
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      preFetchNextPage(currentCategory, newPage, poemsPerPage, keyword, setNextPageData);
-      return newPage;
-    });
+    setPoetryData(nextPageData);
+    setNextPageData([]);
+    setCurrentPage((prevPage) => prevPage + 1);
+    // 不需要在这里调用preFetchNextPage，它将由useEffect处理
   }
 };
   
