@@ -9,11 +9,13 @@ async function fetchData(category, page, perPage, keyword) {
   if (keyword) {
     url = `/api/search?query=${encodeURIComponent(keyword)}`;
   }
+  console.log("Fetching data for page:", page);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
+  console.log("Fetched data length:", data.length);
   return data.map(item => ({
     title: item.title || '',
     author: item.author || '',
@@ -24,6 +26,7 @@ async function fetchData(category, page, perPage, keyword) {
     rhythmic: item.rhythmic || '',
   }));
 }
+
 
 async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
   const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
