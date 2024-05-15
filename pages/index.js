@@ -9,13 +9,11 @@ async function fetchData(category, page, perPage, keyword) {
   if (keyword) {
     url = `/api/search?query=${encodeURIComponent(keyword)}`;
   }
-  console.log("Fetching data for page:", page);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
-  console.log("Fetched data length:", data.length);
   return data.map(item => ({
     title: item.title || '',
     author: item.author || '',
@@ -26,7 +24,6 @@ async function fetchData(category, page, perPage, keyword) {
     rhythmic: item.rhythmic || '',
   }));
 }
-
 
 async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
   const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
@@ -104,12 +101,17 @@ function Home({ initialPoetryData }) {
 };
 
   const goToNextPage = async () => {
-  // 增加当前页的页数并获取下一页的数据
-  const nextPage = currentPage + 1;
-  const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-  const data = await fetchData(currentCategory, nextPage, poemsPerPage, keyword);
-  setCurrentPage(nextPage);
-  setPoetryData(data);
+  if (nextPageData.length > 0) {
+    // 增加当前页的页数
+    setCurrentPage((prevPage) => prevPage + 1);
+    // 更新页面数据为预取的数据
+    setPoetryData(nextPageData);
+    // 清空nextPageData状态，以便下一次的预取操作
+    setNextPageData([]);
+    // 预取下一页的数据
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+  }
 };
 
   const goToPrevPage = () => {
@@ -181,14 +183,13 @@ function Home({ initialPoetryData }) {
         <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
       </div>
 
-      <div className="attribution">    
-        本站在使用上还存在一些小问题，详情请至留言板查看或反馈。
+      <div className="attribution">
+        网站在使用上还存在一些小问题，详情请至留言板查看或反馈。    
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
-        <br />公众号：每天一诗
       </div>
       
       <footer>
-        <a href="https://www.gushici.wang">GUSHICI.WANG</a><span>版权所有</span>
+        <a href="https://www.winglok.com">GUSHICI.WANG</a><span>版权所有</span>
       </footer>
     </>
   );
