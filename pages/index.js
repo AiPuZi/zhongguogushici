@@ -102,15 +102,11 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = async () => {
   if (nextPageData.length > 0) {
-    // 增加当前页的页数
-    setCurrentPage((prevPage) => prevPage + 1);
-    // 更新页面数据为预取的数据
-    setPoetryData(nextPageData);
-    // 清空nextPageData状态，以便下一次的预取操作
-    setNextPageData([]);
-    // 预取下一页的数据
+    // 增加当前页的页数并获取下一页的数据
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+    await preFetchNextPage(currentCategory, nextPage, poemsPerPage, keyword, setNextPageData);
   }
 };
 
