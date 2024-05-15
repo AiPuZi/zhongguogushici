@@ -78,11 +78,10 @@ useEffect(() => {
   };
 }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
-// 专门用于预取下一页数据的useEffect
 useEffect(() => {
   const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
   // 仅当currentPage > 0时预取下一页数据，避免在初始加载时重复预取
-  if (currentPage >= 0) {
+  if (currentPage > 0) {
     preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
   }
 }, [currentPage, currentCategory, poemsPerPage, router.query.query]);
