@@ -101,17 +101,16 @@ function Home({ initialPoetryData }) {
   };
 
   const goToNextPage = async () => {
-    // 先增加当前页的页数
-    const newPage = currentPage + 1;
-    setCurrentPage(newPage);
-
     // 等待 currentPage 更新完成
-    setPoetryData(nextPageData);
-    setNextPageData([]);
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    await setCurrentPage(currentPage + 1);
+
+    // 用新的 currentPage 获取数据
+    const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, keyword);
+    setPoetryData(data);
 
     // 预取下一页的数据
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await preFetchNextPage(currentCategory, newPage, poemsPerPage, keyword, setNextPageData);
+    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
   };
 
   const goToPrevPage = () => {
