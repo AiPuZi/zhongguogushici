@@ -79,6 +79,11 @@ function Home({ initialPoetryData }) {
     };
   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
+  useEffect(() => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
+  }, [currentPage]);
+
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
@@ -100,17 +105,11 @@ function Home({ initialPoetryData }) {
     }
   };
 
-  const goToNextPage = async () => {
-    // 等待 currentPage 更新完成
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    await setCurrentPage(currentPage + 1);
-
-    // 用新的 currentPage 获取数据
-    const data = await fetchData(currentCategory, currentPage + 1, poemsPerPage, keyword);
-    setPoetryData(data);
-
-    // 预取下一页的数据
-    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+  const goToNextPage = () => {
+    if (nextPageData.length > 0) {
+      setPoetryData(nextPageData);
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const goToPrevPage = () => {
