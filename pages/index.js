@@ -79,11 +79,6 @@ function Home({ initialPoetryData }) {
     };
   }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
 
-  useEffect(() => {
-    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
-  }, [currentPage]);
-
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
     setCurrentCategory(category);
@@ -94,27 +89,33 @@ function Home({ initialPoetryData }) {
   };
 
   const handleSearch = async (event) => {
-    event.preventDefault();
-    const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
-    setPoetryData(data);
-    if (data.length < poemsPerPage) {
-      // 如果搜索结果不足一页，则禁用下一页按钮
-      setNextPageData([]);
-    } else {
-      preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
-    }
-  };
+  event.preventDefault();
+  const data = await fetchData(currentCategory, 0, poemsPerPage, searchKeyword);
+  setPoetryData(data);
+  if (data.length < poemsPerPage) {
+    // 如果搜索结果不足一页，则禁用下一页按钮
+    setNextPageData([]);
+  } else {
+    preFetchNextPage(currentCategory, 0, poemsPerPage, searchKeyword, setNextPageData); // Pre-fetch data for next page
+  }
+};
 
-  const goToNextPage = () => {
-    if (nextPageData.length > 0) {
-      setPoetryData(nextPageData);
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  const goToNextPage = async () => {
+  if (nextPageData.length > 0) {
+    // 增加当前页的页数
+    setCurrentPage((prevPage) => prevPage + 1);
+    // 更新页面数据为预取的数据
+    setPoetryData(nextPageData);
+    // 清空nextPageData状态，以便下一次的预取操作
+    setNextPageData([]);
+    // 预取下一页的数据
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    await preFetchNextPage(currentCategory, currentPage + 1, poemsPerPage, keyword, setNextPageData);
+  }
+};
 
   const goToPrevPage = () => {
-    const newPage = currentPage > 0 ? currentPage - 1 : 0;
-    setCurrentPage(newPage);
+    setCurrentPage(prevPage => (prevPage > 0 ? prevPage - 1 : 0));
   };
   
   return (
@@ -160,7 +161,7 @@ function Home({ initialPoetryData }) {
         <a href="/caocaoshiji" onClick={(e) => handleCategoryChange('caocaoshiji', e)}>曹操诗集</a>
       </nav>
       
-      <main id="poetry-content">
+<main id="poetry-content">
         {Array.isArray(poetryData) && poetryData.map((poem, index) => (
           <div key={index} className="poem">
             <Poem
