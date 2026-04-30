@@ -66,11 +66,11 @@ function Home({ initialPoetryData }) {
     const cacheKey = getCacheKey(category, page, keyword);
     if (pageCacheRef.current.has(cacheKey) || page < 1) return;
     
-    console.log('正在预取页面:', { category, page, keyword, cacheKey });
+    console.log('正在预取页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
-      console.log('预取完成:', cacheKey, '缓存内容:', Array.from(pageCacheRef.current.keys()));
+      console.log('预取完成: ' + cacheKey + ', 当前缓存: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
     } catch (error) {
       console.error('预取失败:', error);
     }
@@ -79,11 +79,11 @@ function Home({ initialPoetryData }) {
   const loadPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
     
-    console.log('加载页面:', { category, page, cacheKey, hasCache: pageCacheRef.current.has(cacheKey) });
-    console.log('当前缓存内容:', Array.from(pageCacheRef.current.keys()));
+    console.log('加载页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey + ', hasCache=' + pageCacheRef.current.has(cacheKey));
+    console.log('当前缓存内容: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
     
     if (pageCacheRef.current.has(cacheKey)) {
-      console.log('使用缓存:', cacheKey);
+      console.log('使用缓存: ' + cacheKey);
       setPoetryData(pageCacheRef.current.get(cacheKey));
       setCurrentPage(page);
       preFetchPage(category, page - 1, keyword);
@@ -91,12 +91,12 @@ function Home({ initialPoetryData }) {
       return;
     }
 
-    console.log('从服务器加载:', cacheKey);
+    console.log('从服务器加载: ' + cacheKey);
     setIsLoading(true);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
-      console.log('已缓存:', cacheKey, '当前缓存:', Array.from(pageCacheRef.current.keys()));
+      console.log('已缓存: ' + cacheKey + ', 当前缓存: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
       setPoetryData(data);
       setCurrentPage(page);
       preFetchPage(category, page - 1, keyword);
@@ -132,14 +132,14 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-    console.log('点击下一页:', { currentPage, nextPage: currentPage + 1, keyword });
+    console.log('点击下一页: currentPage=' + currentPage + ', nextPage=' + (currentPage + 1) + ', keyword=' + (keyword || '空'));
     loadPage(currentCategory, currentPage + 1, keyword);
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-      console.log('点击上一页:', { currentPage, prevPage: currentPage - 1, keyword });
+      console.log('点击上一页: currentPage=' + currentPage + ', prevPage=' + (currentPage - 1) + ', keyword=' + (keyword || '空'));
       loadPage(currentCategory, currentPage - 1, keyword);
     }
   };
