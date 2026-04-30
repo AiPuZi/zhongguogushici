@@ -47,19 +47,14 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [pageCache, setPageCache] = useState(new Map());
+  const [pageCache, setPageCache] = useState(() => {
+    const initialCache = new Map();
+    initialCache.set('quantangshi-1-', initialPoetryData || []);
+    return initialCache;
+  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const poemsPerPage = 9;
-
-  useEffect(() => {
-    setPageCache(prev => {
-      const newCache = new Map(prev);
-      newCache.set('quantangshi-1-', initialPoetryData || []);
-      return newCache;
-    });
-  }, [initialPoetryData]);
 
   const getCacheKey = useCallback((category, page, keyword) => {
     return `${category}-${page}-${keyword || ''}`;
@@ -92,7 +87,6 @@ function Home({ initialPoetryData }) {
       return;
     }
 
-    setIsLoading(true);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       setPageCache(prev => {
@@ -106,15 +100,19 @@ function Home({ initialPoetryData }) {
       preFetchPage(category, page + 1, keyword);
     } catch (error) {
       console.error('加载页面失败:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [pageCache, getCacheKey, preFetchPage, poemsPerPage]);
 
   useEffect(() => {
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-    loadPage(currentCategory, currentPage, keyword);
+    if (currentCategory !== 'quantangshi' || currentPage !== 1 || keyword) {
+      loadPage(currentCategory, currentPage, keyword);
+    }
   }, [currentCategory, router.query.query]);
+
+  useEffect(() => {
+    preFetchPage('quantangshi', 2, '');
+  }, []);
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
@@ -183,9 +181,7 @@ function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-        {isLoading ? (
-          <div className="no-results">加载中...</div>
-        ) : Array.isArray(poetryData) && poetryData.length > 0 ? (
+        {Array.isArray(poetryData) && poetryData.length > 0 ? (
           poetryData.map((poem, index) => (
             <div key={index} className="poem">
               <Poem
@@ -200,14 +196,14 @@ function Home({ initialPoetryData }) {
             </div>
           ))
         ) : (
-          <div className="no-results">正在加载或未找到相关内容...</div>
+          <div className="no-results">未找到相关内容...</div>
         )}
       </main>
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1 || isLoading}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage || isLoading}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">    
