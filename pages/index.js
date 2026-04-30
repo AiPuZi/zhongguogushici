@@ -234,7 +234,7 @@ function Home({ initialPoetryData }) {
             </div>
           ))
         ) : (
-          <div className="no-results">未找到相关内容...</div>
+          <div className="text-sm">未找到相关内容。</div>
         )}
       </main>
 
@@ -245,7 +245,7 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">    
-        本站如在使用上遇到问题，请至留言板留言反馈。
+        注：受服务器限制，搜索时需等待十秒左右。如在使用上遇到问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
       
