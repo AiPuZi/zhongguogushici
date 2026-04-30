@@ -234,7 +234,7 @@ function Home({ initialPoetryData }) {
             </div>
           ))
         ) : (
-          <div className="no-results text-sm">未找到相关内容。</div>
+          <div className="no-results" style={{ fontSize: '0.9em' }}>未找到相关内容。</div>
         )}
       </main>
 
