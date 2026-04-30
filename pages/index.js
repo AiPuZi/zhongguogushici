@@ -49,6 +49,7 @@ function Home({ initialPoetryData }) {
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const poemsPerPage = 9;
   
   const pageCacheRef = useRef(new Map());
@@ -65,9 +66,11 @@ function Home({ initialPoetryData }) {
     const cacheKey = getCacheKey(category, page, keyword);
     if (pageCacheRef.current.has(cacheKey) || page < 1) return;
     
+    console.log('正在预取页面:', { category, page, cacheKey });
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
+      console.log('预取完成:', cacheKey);
     } catch (error) {
       console.error('预取失败:', error);
     }
@@ -76,7 +79,10 @@ function Home({ initialPoetryData }) {
   const loadPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
     
+    console.log('加载页面:', { category, page, cacheKey, hasCache: pageCacheRef.current.has(cacheKey) });
+    
     if (pageCacheRef.current.has(cacheKey)) {
+      console.log('使用缓存:', cacheKey);
       setPoetryData(pageCacheRef.current.get(cacheKey));
       setCurrentPage(page);
       preFetchPage(category, page - 1, keyword);
@@ -84,6 +90,8 @@ function Home({ initialPoetryData }) {
       return;
     }
 
+    console.log('从服务器加载:', cacheKey);
+    setIsLoading(true);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
@@ -93,6 +101,8 @@ function Home({ initialPoetryData }) {
       preFetchPage(category, page + 1, keyword);
     } catch (error) {
       console.error('加载页面失败:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [getCacheKey, preFetchPage, poemsPerPage]);
 
@@ -195,8 +205,8 @@ function Home({ initialPoetryData }) {
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1 || isLoading}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage || isLoading}>下一页</button>
       </div>
 
       <div className="attribution">    
