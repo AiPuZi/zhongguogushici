@@ -25,10 +25,7 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
-async function preFetchNextPage(category, currentPage, poemsPerPage, keyword, setNextPageData) {
-  const data = await fetchData(category, currentPage + 1, poemsPerPage, keyword);
-  setNextPageData(data);
-}
+
 
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
@@ -52,20 +49,54 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [nextPageData, setNextPageData] = useState([]);
+  const [pageCache, setPageCache] = useState(() => {
+    const initialCache = new Map();
+    initialCache.set('quantangshi-1-', initialPoetryData || []);
+    return initialCache;
+  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const poemsPerPage = 9;
+
+  const getCacheKey = (category, page, keyword) => {
+    return `${category}-${page}-${keyword || ''}`;
+  };
+
+  const preFetchPage = async (category, page, keyword) => {
+    const cacheKey = getCacheKey(category, page, keyword);
+    if (pageCache.has(cacheKey) || page < 1) return;
+    
+    try {
+      const data = await fetchData(category, page, poemsPerPage, keyword);
+      setPageCache(prev => new Map(prev).set(cacheKey, data));
+    } catch (error) {
+      console.error('预取失败:', error);
+    }
+  };
+
+  const preFetchAdjacentPages = (category, currentPage, keyword) => {
+    preFetchPage(category, currentPage - 1, keyword);
+    preFetchPage(category, currentPage + 1, keyword);
+  };
 
   useEffect(() => {
     let cancel = false;
     const fetchDataAndSetPoetryData = async () => {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+      const cacheKey = getCacheKey(currentCategory, currentPage, keyword);
+      
+      if (pageCache.has(cacheKey)) {
+        setPoetryData(pageCache.get(cacheKey));
+      } else {
+        const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
+        if (!cancel) {
+          setPoetryData(data);
+          setPageCache(prev => new Map(prev).set(cacheKey, data));
+        }
+      }
+      
       if (!cancel) {
-        setPoetryData(data);
-        // 只要当前页码改变，就预取下一页数据，确保“下一页”按钮可用
-        preFetchNextPage(currentCategory, currentPage, poemsPerPage, keyword, setNextPageData);
+        preFetchAdjacentPages(currentCategory, currentPage, keyword);
       }
     };
 
@@ -80,40 +111,60 @@ function Home({ initialPoetryData }) {
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
+    const cacheKey = getCacheKey(category, 1, '');
+    
+    if (pageCache.has(cacheKey)) {
+      setPoetryData(pageCache.get(cacheKey));
+    } else {
+      const data = await fetchData(category, 1, poemsPerPage, '');
+      setPoetryData(data);
+      setPageCache(prev => new Map(prev).set(cacheKey, data));
+    }
+    
     setCurrentCategory(category);
     setCurrentPage(1);
-    const data = await fetchData(category, 1, poemsPerPage, '');
-    setPoetryData(data);
-    preFetchNextPage(category, 1, poemsPerPage, '', setNextPageData);
+    preFetchAdjacentPages(category, 1, '');
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    setCurrentPage(1);
-    const data = await fetchData(currentCategory, 1, poemsPerPage, searchKeyword);
-    setPoetryData(data);
-    if (data.length < poemsPerPage) {
-      setNextPageData([]);
+    const cacheKey = getCacheKey(currentCategory, 1, searchKeyword);
+    
+    if (pageCache.has(cacheKey)) {
+      setPoetryData(pageCache.get(cacheKey));
     } else {
-      preFetchNextPage(currentCategory, 1, poemsPerPage, searchKeyword, setNextPageData);
+      const data = await fetchData(currentCategory, 1, poemsPerPage, searchKeyword);
+      setPoetryData(data);
+      setPageCache(prev => new Map(prev).set(cacheKey, data));
     }
+    
+    setCurrentPage(1);
+    preFetchAdjacentPages(currentCategory, 1, searchKeyword);
   };
 
   const goToNextPage = () => {
-    if (nextPageData.length > 0) {
-      const nextPage = currentPage + 1;
-      setPoetryData(nextPageData);
+    const nextPage = currentPage + 1;
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
+    const cacheKey = getCacheKey(currentCategory, nextPage, keyword);
+    
+    if (pageCache.has(cacheKey)) {
+      setPoetryData(pageCache.get(cacheKey));
       setCurrentPage(nextPage);
-      setNextPageData([]);
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-      preFetchNextPage(currentCategory, nextPage, poemsPerPage, keyword, setNextPageData);
+      preFetchAdjacentPages(currentCategory, nextPage, keyword);
     }
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage((prevPage) => prevPage - 1);
-      // 注意：这里没有预取数据，所以切换会有微小延迟，useEffect 会处理数据加载
+      const prevPage = currentPage - 1;
+      const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
+      const cacheKey = getCacheKey(currentCategory, prevPage, keyword);
+      
+      if (pageCache.has(cacheKey)) {
+        setPoetryData(pageCache.get(cacheKey));
+        setCurrentPage(prevPage);
+        preFetchAdjacentPages(currentCategory, prevPage, keyword);
+      }
     }
   };
   
@@ -183,17 +234,16 @@ function Home({ initialPoetryData }) {
       {/* 分页按钮 */}
       <div className="pagination-buttons">
         <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
-        <button onClick={goToNextPage} disabled={nextPageData.length === 0}>下一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
       </div>
 
       <div className="attribution">    
         本站在使用上还存在一些小问题，详情请至留言板查看或反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
-        <br />公众号：每天一诗
       </div>
       
       <footer>
-        <a href="https://www.gushici.wang">GUSHICI.WANG</a><span>版权所有</span>
+        <a href="/">古诗词网</a><span>版权所有</span>
       </footer>
     </>
   );
