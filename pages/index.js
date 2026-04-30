@@ -53,6 +53,7 @@ function Home({ initialPoetryData }) {
   const poemsPerPage = 9;
   
   const pageCacheRef = useRef(new Map());
+  const prefetchingPagesRef = useRef(new Set());
   
   useEffect(() => {
     pageCacheRef.current.set('quantangshi-1-', initialPoetryData || []);
@@ -64,8 +65,9 @@ function Home({ initialPoetryData }) {
 
   const preFetchPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
-    if (pageCacheRef.current.has(cacheKey) || page < 1) return;
+    if (pageCacheRef.current.has(cacheKey) || page < 1 || prefetchingPagesRef.current.has(cacheKey)) return;
     
+    prefetchingPagesRef.current.add(cacheKey);
     console.log('正在预取页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
@@ -73,13 +75,15 @@ function Home({ initialPoetryData }) {
       console.log('预取完成: ' + cacheKey + ', 当前缓存: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
     } catch (error) {
       console.error('预取失败:', error);
+    } finally {
+      prefetchingPagesRef.current.delete(cacheKey);
     }
   }, [getCacheKey, poemsPerPage]);
 
   const loadPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
     
-    console.log('加载页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey + ', hasCache=' + pageCacheRef.current.has(cacheKey));
+    console.log('加载页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey + ', hasCache=' + pageCacheRef.current.has(cacheKey) + ', isPrefetching=' + prefetchingPagesRef.current.has(cacheKey));
     console.log('当前缓存内容: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
     
     if (pageCacheRef.current.has(cacheKey)) {
@@ -89,6 +93,30 @@ function Home({ initialPoetryData }) {
       preFetchPage(category, page - 1, keyword);
       preFetchPage(category, page + 1, keyword);
       return;
+    }
+
+    if (prefetchingPagesRef.current.has(cacheKey)) {
+      console.log('等待预取完成: ' + cacheKey);
+      setIsLoading(true);
+      const maxWaitTime = 10000;
+      const startTime = Date.now();
+      while (prefetchingPagesRef.current.has(cacheKey) && !pageCacheRef.current.has(cacheKey)) {
+        if (Date.now() - startTime > maxWaitTime) {
+          console.log('等待预取超时，直接加载: ' + cacheKey);
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      if (pageCacheRef.current.has(cacheKey)) {
+        console.log('使用已预取的缓存: ' + cacheKey);
+        setPoetryData(pageCacheRef.current.get(cacheKey));
+        setCurrentPage(page);
+        preFetchPage(category, page - 1, keyword);
+        preFetchPage(category, page + 1, keyword);
+        setIsLoading(false);
+        return;
+      }
     }
 
     console.log('从服务器加载: ' + cacheKey);
@@ -117,6 +145,9 @@ function Home({ initialPoetryData }) {
 
   useEffect(() => {
     preFetchPage('quantangshi', 2, '');
+    preFetchPage('quantangshi', 3, '');
+    preFetchPage('quantangshi', 4, '');
+    preFetchPage('quantangshi', 5, '');
   }, []);
 
   const handleCategoryChange = async (category, event) => {
