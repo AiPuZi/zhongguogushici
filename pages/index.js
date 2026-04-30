@@ -245,7 +245,7 @@ function Home({ initialPoetryData }) {
       </div>
 
       <div className="attribution">    
-        本站在使用上还存在一些小问题，详情请至留言板查看或反馈。
+        本站如在使用上遇到问题，请至留言板留言反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
       
