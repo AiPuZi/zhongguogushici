@@ -86,7 +86,9 @@ function Home({ initialPoetryData }) {
       const cacheKey = getCacheKey(currentCategory, currentPage, keyword);
       
       if (pageCache.has(cacheKey)) {
-        setPoetryData(pageCache.get(cacheKey));
+        if (!cancel) {
+          setPoetryData(pageCache.get(cacheKey));
+        }
       } else {
         const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
         if (!cancel) {
@@ -107,7 +109,7 @@ function Home({ initialPoetryData }) {
     return () => {
       cancel = true;
     };
-  }, [currentCategory, currentPage, poemsPerPage, router.query.query]);
+  }, [currentCategory, router.query.query]);
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
@@ -142,7 +144,7 @@ function Home({ initialPoetryData }) {
     preFetchAdjacentPages(currentCategory, 1, searchKeyword);
   };
 
-  const goToNextPage = () => {
+  const goToNextPage = async () => {
     const nextPage = currentPage + 1;
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
     const cacheKey = getCacheKey(currentCategory, nextPage, keyword);
@@ -151,10 +153,20 @@ function Home({ initialPoetryData }) {
       setPoetryData(pageCache.get(cacheKey));
       setCurrentPage(nextPage);
       preFetchAdjacentPages(currentCategory, nextPage, keyword);
+    } else {
+      try {
+        const data = await fetchData(currentCategory, nextPage, poemsPerPage, keyword);
+        setPageCache(prev => new Map(prev).set(cacheKey, data));
+        setPoetryData(data);
+        setCurrentPage(nextPage);
+        preFetchAdjacentPages(currentCategory, nextPage, keyword);
+      } catch (error) {
+        console.error('加载下一页失败:', error);
+      }
     }
   };
 
-  const goToPrevPage = () => {
+  const goToPrevPage = async () => {
     if (currentPage > 1) {
       const prevPage = currentPage - 1;
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
@@ -164,6 +176,16 @@ function Home({ initialPoetryData }) {
         setPoetryData(pageCache.get(cacheKey));
         setCurrentPage(prevPage);
         preFetchAdjacentPages(currentCategory, prevPage, keyword);
+      } else {
+        try {
+          const data = await fetchData(currentCategory, prevPage, poemsPerPage, keyword);
+          setPageCache(prev => new Map(prev).set(cacheKey, data));
+          setPoetryData(data);
+          setCurrentPage(prevPage);
+          preFetchAdjacentPages(currentCategory, prevPage, keyword);
+        } catch (error) {
+          console.error('加载上一页失败:', error);
+        }
       }
     }
   };
