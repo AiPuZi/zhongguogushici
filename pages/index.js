@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Poem from '../components/poem';
 import { useRouter } from 'next/router';
@@ -25,8 +25,6 @@ async function fetchData(category, page, perPage, keyword) {
   }));
 }
 
-
-
 export async function getStaticProps() {
   const baseUrl = process.env.API_BASE_URL;
   const response = await fetch(`${baseUrl}/api/poems?category=quantangshi&page=1&perPage=9`);
@@ -49,144 +47,95 @@ function Home({ initialPoetryData }) {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('quantangshi');
   const [poetryData, setPoetryData] = useState(initialPoetryData || []);
-  const [pageCache, setPageCache] = useState(() => {
-    const initialCache = new Map();
-    initialCache.set('quantangshi-1-', initialPoetryData || []);
-    return initialCache;
-  });
+  const [pageCache, setPageCache] = useState(new Map());
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const poemsPerPage = 9;
 
-  const getCacheKey = (category, page, keyword) => {
-    return `${category}-${page}-${keyword || ''}`;
-  };
+  useEffect(() => {
+    setPageCache(prev => {
+      const newCache = new Map(prev);
+      newCache.set('quantangshi-1-', initialPoetryData || []);
+      return newCache;
+    });
+  }, [initialPoetryData]);
 
-  const preFetchPage = async (category, page, keyword) => {
+  const getCacheKey = useCallback((category, page, keyword) => {
+    return `${category}-${page}-${keyword || ''}`;
+  }, []);
+
+  const preFetchPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
     if (pageCache.has(cacheKey) || page < 1) return;
     
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
-      setPageCache(prev => new Map(prev).set(cacheKey, data));
+      setPageCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(cacheKey, data);
+        return newCache;
+      });
     } catch (error) {
       console.error('预取失败:', error);
     }
-  };
+  }, [pageCache, getCacheKey, poemsPerPage]);
 
-  const preFetchAdjacentPages = (category, currentPage, keyword) => {
-    preFetchPage(category, currentPage - 1, keyword);
-    preFetchPage(category, currentPage + 1, keyword);
-  };
-
-  useEffect(() => {
-    let cancel = false;
-    const fetchDataAndSetPoetryData = async () => {
-      const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
-      const cacheKey = getCacheKey(currentCategory, currentPage, keyword);
-      
-      if (pageCache.has(cacheKey)) {
-        if (!cancel) {
-          setPoetryData(pageCache.get(cacheKey));
-        }
-      } else {
-        const data = await fetchData(currentCategory, currentPage, poemsPerPage, keyword);
-        if (!cancel) {
-          setPoetryData(data);
-          setPageCache(prev => new Map(prev).set(cacheKey, data));
-        }
-      }
-      
-      if (!cancel) {
-        preFetchAdjacentPages(currentCategory, currentPage, keyword);
-      }
-    };
-
-    if (currentCategory !== '') {
-      fetchDataAndSetPoetryData();
+  const loadPage = useCallback(async (category, page, keyword) => {
+    const cacheKey = getCacheKey(category, page, keyword);
+    
+    if (pageCache.has(cacheKey)) {
+      setPoetryData(pageCache.get(cacheKey));
+      setCurrentPage(page);
+      preFetchPage(category, page - 1, keyword);
+      preFetchPage(category, page + 1, keyword);
+      return;
     }
 
-    return () => {
-      cancel = true;
-    };
+    setIsLoading(true);
+    try {
+      const data = await fetchData(category, page, poemsPerPage, keyword);
+      setPageCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(cacheKey, data);
+        return newCache;
+      });
+      setPoetryData(data);
+      setCurrentPage(page);
+      preFetchPage(category, page - 1, keyword);
+      preFetchPage(category, page + 1, keyword);
+    } catch (error) {
+      console.error('加载页面失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pageCache, getCacheKey, preFetchPage, poemsPerPage]);
+
+  useEffect(() => {
+    const keyword = router.query.query ? decodeURIComponent(router.query.query) : '';
+    loadPage(currentCategory, currentPage, keyword);
   }, [currentCategory, router.query.query]);
 
   const handleCategoryChange = async (category, event) => {
     event.preventDefault();
-    const cacheKey = getCacheKey(category, 1, '');
-    
-    if (pageCache.has(cacheKey)) {
-      setPoetryData(pageCache.get(cacheKey));
-    } else {
-      const data = await fetchData(category, 1, poemsPerPage, '');
-      setPoetryData(data);
-      setPageCache(prev => new Map(prev).set(cacheKey, data));
-    }
-    
     setCurrentCategory(category);
-    setCurrentPage(1);
-    preFetchAdjacentPages(category, 1, '');
+    loadPage(category, 1, '');
   };
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const cacheKey = getCacheKey(currentCategory, 1, searchKeyword);
-    
-    if (pageCache.has(cacheKey)) {
-      setPoetryData(pageCache.get(cacheKey));
-    } else {
-      const data = await fetchData(currentCategory, 1, poemsPerPage, searchKeyword);
-      setPoetryData(data);
-      setPageCache(prev => new Map(prev).set(cacheKey, data));
-    }
-    
-    setCurrentPage(1);
-    preFetchAdjacentPages(currentCategory, 1, searchKeyword);
+    loadPage(currentCategory, 1, searchKeyword);
   };
 
-  const goToNextPage = async () => {
-    const nextPage = currentPage + 1;
+  const goToNextPage = () => {
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-    const cacheKey = getCacheKey(currentCategory, nextPage, keyword);
-    
-    if (pageCache.has(cacheKey)) {
-      setPoetryData(pageCache.get(cacheKey));
-      setCurrentPage(nextPage);
-      preFetchAdjacentPages(currentCategory, nextPage, keyword);
-    } else {
-      try {
-        const data = await fetchData(currentCategory, nextPage, poemsPerPage, keyword);
-        setPageCache(prev => new Map(prev).set(cacheKey, data));
-        setPoetryData(data);
-        setCurrentPage(nextPage);
-        preFetchAdjacentPages(currentCategory, nextPage, keyword);
-      } catch (error) {
-        console.error('加载下一页失败:', error);
-      }
-    }
+    loadPage(currentCategory, currentPage + 1, keyword);
   };
 
-  const goToPrevPage = async () => {
+  const goToPrevPage = () => {
     if (currentPage > 1) {
-      const prevPage = currentPage - 1;
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-      const cacheKey = getCacheKey(currentCategory, prevPage, keyword);
-      
-      if (pageCache.has(cacheKey)) {
-        setPoetryData(pageCache.get(cacheKey));
-        setCurrentPage(prevPage);
-        preFetchAdjacentPages(currentCategory, prevPage, keyword);
-      } else {
-        try {
-          const data = await fetchData(currentCategory, prevPage, poemsPerPage, keyword);
-          setPageCache(prev => new Map(prev).set(cacheKey, data));
-          setPoetryData(data);
-          setCurrentPage(prevPage);
-          preFetchAdjacentPages(currentCategory, prevPage, keyword);
-        } catch (error) {
-          console.error('加载上一页失败:', error);
-        }
-      }
+      loadPage(currentCategory, currentPage - 1, keyword);
     }
   };
   
@@ -234,7 +183,9 @@ function Home({ initialPoetryData }) {
       </nav>
       
 <main id="poetry-content">
-        {Array.isArray(poetryData) && poetryData.length > 0 ? (
+        {isLoading ? (
+          <div className="no-results">加载中...</div>
+        ) : Array.isArray(poetryData) && poetryData.length > 0 ? (
           poetryData.map((poem, index) => (
             <div key={index} className="poem">
               <Poem
@@ -255,8 +206,8 @@ function Home({ initialPoetryData }) {
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1 || isLoading}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage || isLoading}>下一页</button>
       </div>
 
       <div className="attribution">    
