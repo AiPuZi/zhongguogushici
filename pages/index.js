@@ -66,11 +66,11 @@ function Home({ initialPoetryData }) {
     const cacheKey = getCacheKey(category, page, keyword);
     if (pageCacheRef.current.has(cacheKey) || page < 1) return;
     
-    console.log('正在预取页面:', { category, page, cacheKey });
+    console.log('正在预取页面:', { category, page, keyword, cacheKey });
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
-      console.log('预取完成:', cacheKey);
+      console.log('预取完成:', cacheKey, '缓存内容:', Array.from(pageCacheRef.current.keys()));
     } catch (error) {
       console.error('预取失败:', error);
     }
@@ -80,6 +80,7 @@ function Home({ initialPoetryData }) {
     const cacheKey = getCacheKey(category, page, keyword);
     
     console.log('加载页面:', { category, page, cacheKey, hasCache: pageCacheRef.current.has(cacheKey) });
+    console.log('当前缓存内容:', Array.from(pageCacheRef.current.keys()));
     
     if (pageCacheRef.current.has(cacheKey)) {
       console.log('使用缓存:', cacheKey);
@@ -95,6 +96,7 @@ function Home({ initialPoetryData }) {
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
+      console.log('已缓存:', cacheKey, '当前缓存:', Array.from(pageCacheRef.current.keys()));
       setPoetryData(data);
       setCurrentPage(page);
       preFetchPage(category, page - 1, keyword);
@@ -130,12 +132,14 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
+    console.log('点击下一页:', { currentPage, nextPage: currentPage + 1, keyword });
     loadPage(currentCategory, currentPage + 1, keyword);
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
+      console.log('点击上一页:', { currentPage, prevPage: currentPage - 1, keyword });
       loadPage(currentCategory, currentPage - 1, keyword);
     }
   };
