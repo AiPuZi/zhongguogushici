@@ -51,8 +51,6 @@ function Home({ initialPoetryData }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const poemsPerPage = 9;
-  const [isPrevDisabled, setIsPrevDisabled] = useState(false);
-  const [isNextDisabled, setIsNextDisabled] = useState(false);
   
   const pageCacheRef = useRef(new Map());
   const prefetchingPagesRef = useRef(new Set());
@@ -70,11 +68,13 @@ function Home({ initialPoetryData }) {
     if (pageCacheRef.current.has(cacheKey) || page < 1 || prefetchingPagesRef.current.has(cacheKey)) return;
     
     prefetchingPagesRef.current.add(cacheKey);
+    console.log('正在预取页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
+      console.log('预取完成: ' + cacheKey + ', 当前缓存: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
     } catch (error) {
-      // 预取失败不影响主流程，可选择静默失败
+      console.error('预取失败:', error);
     } finally {
       prefetchingPagesRef.current.delete(cacheKey);
     }
@@ -83,32 +83,35 @@ function Home({ initialPoetryData }) {
   const loadPage = useCallback(async (category, page, keyword) => {
     const cacheKey = getCacheKey(category, page, keyword);
     
+    console.log('加载页面: category=' + category + ', page=' + page + ', keyword=' + (keyword || '空') + ', cacheKey=' + cacheKey + ', hasCache=' + pageCacheRef.current.has(cacheKey) + ', isPrefetching=' + prefetchingPagesRef.current.has(cacheKey));
+    console.log('当前缓存内容: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
+    
     if (pageCacheRef.current.has(cacheKey)) {
+      console.log('使用缓存: ' + cacheKey);
       setPoetryData(pageCacheRef.current.get(cacheKey));
       setCurrentPage(page);
-      setIsPrevDisabled(false);
-      setIsNextDisabled(false);
       preFetchPage(category, page - 1, keyword);
       preFetchPage(category, page + 1, keyword);
       return;
     }
 
     if (prefetchingPagesRef.current.has(cacheKey)) {
+      console.log('等待预取完成: ' + cacheKey);
       setIsLoading(true);
       const maxWaitTime = 10000;
       const startTime = Date.now();
       while (prefetchingPagesRef.current.has(cacheKey) && !pageCacheRef.current.has(cacheKey)) {
         if (Date.now() - startTime > maxWaitTime) {
+          console.log('等待预取超时，直接加载: ' + cacheKey);
           break;
         }
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       if (pageCacheRef.current.has(cacheKey)) {
+        console.log('使用已预取的缓存: ' + cacheKey);
         setPoetryData(pageCacheRef.current.get(cacheKey));
         setCurrentPage(page);
-        setIsPrevDisabled(false);
-        setIsNextDisabled(false);
         preFetchPage(category, page - 1, keyword);
         preFetchPage(category, page + 1, keyword);
         setIsLoading(false);
@@ -116,21 +119,18 @@ function Home({ initialPoetryData }) {
       }
     }
 
+    console.log('从服务器加载: ' + cacheKey);
     setIsLoading(true);
     try {
       const data = await fetchData(category, page, poemsPerPage, keyword);
       pageCacheRef.current.set(cacheKey, data);
+      console.log('已缓存: ' + cacheKey + ', 当前缓存: [' + Array.from(pageCacheRef.current.keys()).join(', ') + ']');
       setPoetryData(data);
       setCurrentPage(page);
-      setIsPrevDisabled(false);
-      setIsNextDisabled(false);
       preFetchPage(category, page - 1, keyword);
       preFetchPage(category, page + 1, keyword);
     } catch (error) {
-      // 加载失败处理，可考虑增加用户提示
-      // 加载失败时也重置按钮状态
-      setIsPrevDisabled(false);
-      setIsNextDisabled(false);
+      console.error('加载页面失败:', error);
     } finally {
       setIsLoading(false);
     }
@@ -163,14 +163,14 @@ function Home({ initialPoetryData }) {
 
   const goToNextPage = () => {
     const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-    setIsNextDisabled(true);
+    console.log('点击下一页: currentPage=' + currentPage + ', nextPage=' + (currentPage + 1) + ', keyword=' + (keyword || '空'));
     loadPage(currentCategory, currentPage + 1, keyword);
   };
 
   const goToPrevPage = () => {
     if (currentPage > 1) {
       const keyword = router.query.query ? decodeURIComponent(router.query.query) : searchKeyword;
-      setIsPrevDisabled(true);
+      console.log('点击上一页: currentPage=' + currentPage + ', prevPage=' + (currentPage - 1) + ', keyword=' + (keyword || '空'));
       loadPage(currentCategory, currentPage - 1, keyword);
     }
   };
@@ -240,12 +240,12 @@ function Home({ initialPoetryData }) {
 
       {/* 分页按钮 */}
       <div className="pagination-buttons">
-        <button onClick={goToPrevPage} disabled={currentPage === 1 || isPrevDisabled}>上一页</button>
-        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage || isNextDisabled}>下一页</button>
+        <button onClick={goToPrevPage} disabled={currentPage === 1 || isLoading}>上一页</button>
+        <button onClick={goToNextPage} disabled={poetryData.length < poemsPerPage || isLoading}>下一页</button>
       </div>
 
       <div className="attribution">    
-        本站如在使用上遇到问题，请至留言板留言反馈。
+        本站在使用上还存在一些小问题，详情请至留言板查看或反馈。
         <br /><a href="https://www.winglok.com" target="_blank">留言板</a>
       </div>
       
